@@ -1,0 +1,110 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: smeflow-postgres
+    environment:
+      POSTGRES_DB: smeflow
+      POSTGRES_USER: smeflow
+      POSTGRES_PASSWORD: smeflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U smeflow -d smeflow"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: smeflow-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Keycloak Authentication
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0
+    container_name: smeflow-keycloak
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin123
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak123
+      KC_HOSTNAME: localhost
+      KC_HOSTNAME_PORT: 8080
+      KC_HOSTNAME_STRICT: false
+      KC_HOSTNAME_STRICT_HTTPS: false
+      KC_HTTP_ENABLED: true
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: start-dev
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health/ready || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # LiveKit Voice Server
+  livekit:
+    image: livekit/livekit-server:latest
+    container_name: smeflow-livekit
+    ports:
+      - "7880:7880"
+      - "7881:7881"
+    volumes:
+      - ./config/livekit.yaml:/etc/livekit.yaml
+    command: --config /etc/livekit.yaml
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:7880/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # SMEFlow API (Development)
+  smeflow-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: smeflow-api
+    environment:
+      - DEBUG=true
+      - DATABASE_URL=postgresql+asyncpg://smeflow:smeflow@postgres:5432/smeflow
+      - REDIS_URL=redis://redis:6379/0
+      - KEYCLOAK_URL=http://keycloak:8080
+      - LIVEKIT_WS_URL=ws://livekit:7880
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+      - /app/.venv
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    command: python -m smeflow.main
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:

@@ -1,0 +1,168 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "smeflow"
+version = "0.1.0"
+description = "Agentic Process Automation Platform for African SMEs"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "SMEFlow Team", email = "team@sme-flow.org"}
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+requires-python = ">=3.10"
+dependencies = [
+    # Core Framework
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    "pydantic>=2.5.0",
+    "python-dotenv>=1.0.0",
+    
+    # AI/ML Stack
+    "langchain>=0.1.0",
+    "langchain-openai>=0.0.5",
+    "langchain-anthropic>=0.1.0",
+    "langgraph>=0.0.30",
+    "langfuse>=2.0.0",
+    
+    # Database
+    "asyncpg>=0.29.0",
+    "sqlalchemy[asyncio]>=2.0.23",
+    "alembic>=1.13.0",
+    "redis>=5.0.1",
+    
+    # Authentication & Security
+    "python-keycloak>=3.7.0",
+    "python-jose[cryptography]>=3.3.0",
+    "passlib[bcrypt]>=1.7.4",
+    "cryptography>=41.0.7",
+    
+    # Integration & Workflow
+    "httpx>=0.25.2",
+    "aiofiles>=23.2.1",
+    "celery>=5.3.4",
+    "kombu>=5.3.4",
+    
+    # Observability
+    "prometheus-client>=0.19.0",
+    "structlog>=23.2.0",
+    "sentry-sdk[fastapi]>=1.38.0",
+    
+    # African Market Integrations
+    "requests>=2.31.0",
+    "websockets>=12.0",
+    
+    # Development
+    "pytest>=7.4.3",
+    "pytest-asyncio>=0.21.1",
+    "pytest-cov>=4.1.0",
+    "black>=23.11.0",
+    "isort>=5.12.0",
+    "mypy>=1.7.1",
+    "pre-commit>=3.6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.3",
+    "pytest-asyncio>=0.21.1",
+    "pytest-cov>=4.1.0",
+    "black>=23.11.0",
+    "isort>=5.12.0",
+    "mypy>=1.7.1",
+    "pre-commit>=3.6.0",
+    "ruff>=0.1.6",
+]
+
+voice = [
+    "livekit>=0.10.0",
+    "speechrecognition>=3.10.0",
+    "pydub>=0.25.1",
+]
+
+[project.urls]
+Homepage = "https://sme-flow.org"
+Repository = "https://github.com/smeflow/smeflow"
+Documentation = "https://docs.sme-flow.org"
+Issues = "https://github.com/smeflow/smeflow/issues"
+
+[project.scripts]
+smeflow = "smeflow.main:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["smeflow*"]
+exclude = ["tests*"]
+
+[tool.black]
+line-length = 88
+target-version = ['py310']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+line_length = 88
+known_first_party = ["smeflow"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -q --cov=smeflow --cov-report=term-missing --cov-report=html"
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.coverage.run]
+source = ["smeflow"]
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+    "*/__init__.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+]

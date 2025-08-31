@@ -1,0 +1,100 @@
+# SMEFlow - Agentic Process Automation Platform
+# Core LangChain and LangGraph for Agent Layer
+langchain>=0.1.0
+langchain-community>=0.0.20
+langchain-core>=0.1.0
+langgraph>=0.0.30
+langchain-experimental>=0.0.50
+pyautogen>=0.2.0
+
+# Workflow Engine and Orchestration
+n8n-python-sdk>=0.1.0
+celery>=5.3.0
+redis>=5.0.0
+dramatiq>=1.15.0
+
+# Multi-tenancy and Database
+sqlalchemy>=2.0.0
+alembic>=1.12.0
+psycopg2-binary>=2.9.0
+tenacity>=8.2.0
+
+# Observability and Monitoring
+langfuse>=2.0.0
+prometheus-client>=0.19.0
+structlog>=23.2.0
+sentry-sdk>=1.40.0
+
+# Enhanced Observability (SigNoz integration)
+opentelemetry-api>=1.21.0
+opentelemetry-sdk>=1.21.0
+opentelemetry-exporter-otlp>=1.21.0
+opentelemetry-instrumentation-fastapi>=0.42b0
+opentelemetry-instrumentation-sqlalchemy>=0.42b0
+
+# Compliance and Risk Management
+giskard>=2.5.0
+privacy-meter>=0.2.0
+
+# Security and Compliance (CBN, POPIA)
+PyJWT>=2.8.0
+cryptography>=41.0.0
+authlib>=1.3.0
+pydantic>=2.0.0
+
+# API Gateway and Service Mesh
+kong-python>=0.1.0
+envoy-python>=0.1.0
+
+# API and Web Framework
+fastapi>=0.104.0
+uvicorn>=0.24.0
+starlette>=0.27.0
+httpx>=0.25.0
+
+# Data Processing (ProAgent-inspired)
+pandas>=2.1.0
+numpy>=1.24.0
+scikit-learn>=1.3.0
+transformers>=4.35.0
+datasets>=2.14.0
+
+# African Market Support (Multilingual)
+googletrans>=4.0.0
+polyglot>=16.7.4
+babel>=2.13.0
+phonenumbers>=8.13.0
+
+# Voice Automation
+speechrecognition>=3.10.0
+pyttsx3>=2.90
+azure-cognitiveservices-speech>=1.34.0
+
+# Hyperlocal Intelligence
+geopy>=2.4.0
+folium>=0.15.0
+opencage>=2.2.0
+
+# Integration Layer (n8N and connectors)
+requests-oauthlib>=1.3.0
+xmltodict>=0.13.0
+jsonschema>=4.19.0
+requests>=2.31.0
+websockets>=12.0
+
+# Testing
+pytest>=7.4.3
+pytest-asyncio>=0.21.1
+pytest-cov>=4.1.0
+
+# Development
+black>=23.11.0
+isort>=5.12.0
+mypy>=1.7.1
+pre-commit>=3.6.0
+ruff>=0.1.6
+aiofiles>=23.2.0
+pydantic-settings>=2.0.0
+click>=8.1.0
+typer>=0.9.0
+python-dotenv>=1.0.0

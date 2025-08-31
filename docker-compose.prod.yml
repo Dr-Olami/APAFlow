@@ -1,0 +1,155 @@
+version: '3.8'
+
+services:
+  # Nginx reverse proxy with SSL
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: smeflow-nginx
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/letsencrypt:ro
+      - ./nginx/certbot:/var/www/certbot:ro
+      - ./static:/var/www/static:ro
+    depends_on:
+      - smeflow-api
+      - keycloak
+    restart: unless-stopped
+    networks:
+      - smeflow-network
+
+  # Certbot for Let's Encrypt SSL certificates
+  certbot:
+    image: certbot/certbot:latest
+    container_name: smeflow-certbot
+    volumes:
+      - ./nginx/ssl:/etc/letsencrypt
+      - ./nginx/certbot:/var/www/certbot
+    command: certonly --webroot --webroot-path=/var/www/certbot --email admin@smeflow.com --agree-tos --no-eff-email -d smeflow.com -d api.smeflow.com
+    depends_on:
+      - nginx
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: smeflow-postgres
+    environment:
+      POSTGRES_DB: smeflow
+      POSTGRES_USER: smeflow
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_MULTIPLE_DATABASES: keycloak
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    ports:
+      - '5432:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U smeflow']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - smeflow-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: smeflow-redis
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'redis-cli',
+          '--no-auth-warning',
+          '-a',
+          '${REDIS_PASSWORD}',
+          'ping',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - smeflow-network
+
+  # Keycloak Authentication
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0
+    container_name: smeflow-keycloak
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD}
+      KC_HOSTNAME: smeflow.com
+      KC_HOSTNAME_STRICT: true
+      KC_HOSTNAME_STRICT_HTTPS: true
+      KC_HTTP_ENABLED: false
+      KC_PROXY: edge
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: start --optimized
+    restart: unless-stopped
+    networks:
+      - smeflow-network
+
+  # SMEFlow API Application
+  smeflow-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: smeflow-api
+    environment:
+      # Database
+      DATABASE_URL: postgresql://smeflow:${POSTGRES_PASSWORD}@postgres:5432/smeflow
+
+      # Redis
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
+
+      # Authentication
+      KEYCLOAK_SERVER_URL: https://smeflow.com/auth
+      KEYCLOAK_REALM: smeflow
+      KEYCLOAK_CLIENT_ID: smeflow-api
+      KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET}
+
+      # Application
+      APP_ENV: production
+      DEBUG: false
+      SECRET_KEY: ${SECRET_KEY}
+      ALLOWED_HOSTS: smeflow.com,api.smeflow.com
+      CORS_ORIGINS: https://smeflow.com
+
+      # Logging
+      LOG_LEVEL: INFO
+
+      # LLM Providers
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - smeflow-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  smeflow-network:
+    driver: bridge

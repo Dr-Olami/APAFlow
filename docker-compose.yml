@@ -1,0 +1,122 @@
+version: '3.8'
+
+services:
+  # SMEFlow Main Application (Monolith MVP)
+  smeflow:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - SMEFLOW_DEBUG=true
+      - SMEFLOW_DATABASE_URL=postgresql://smeflow:smeflow123@db:5432/smeflow
+      - SMEFLOW_REDIS_URL=redis://redis:6379/0
+      - SMEFLOW_LANGFUSE_ENABLED=true
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      - db
+      - redis
+      - signoz-otel-collector
+
+  # PostgreSQL Database (Multi-tenant)
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: smeflow
+      POSTGRES_USER: smeflow
+      POSTGRES_PASSWORD: smeflow123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  # Redis (Workflow Engine & Cache)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  # SigNoz - Observability Stack
+  signoz-otel-collector:
+    image: signoz/signoz-otel-collector:0.88.11
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./signoz/otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - "4317:4317"   # OTLP gRPC receiver
+      - "4318:4318"   # OTLP HTTP receiver
+    depends_on:
+      - signoz-clickhouse
+
+  signoz-clickhouse:
+    image: clickhouse/clickhouse-server:23.7
+    environment:
+      - CLICKHOUSE_DB=signoz_traces
+    volumes:
+      - signoz_clickhouse_data:/var/lib/clickhouse
+    ports:
+      - "9000:9000"
+
+  signoz-query-service:
+    image: signoz/query-service:0.38.0
+    command: ["-config=/root/config/prometheus.yml"]
+    volumes:
+      - ./signoz/prometheus.yml:/root/config/prometheus.yml
+    environment:
+      - ClickHouseUrl=tcp://signoz-clickhouse:9000
+    ports:
+      - "8080:8080"
+    depends_on:
+      - signoz-clickhouse
+
+  signoz-frontend:
+    image: signoz/frontend:0.38.0
+    ports:
+      - "3301:3301"
+    depends_on:
+      - signoz-query-service
+
+  # Keycloak (Security & Multi-tenancy)
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin123
+      - KC_DB=postgres
+      - KC_DB_URL=jdbc:postgresql://db:5432/smeflow
+      - KC_DB_USERNAME=smeflow
+      - KC_DB_PASSWORD=smeflow123
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    command: ["start-dev"]
+
+  # n8n (Integration Layer)
+  n8n:
+    image: n8nio/n8n:latest
+    ports:
+      - "5678:5678"
+    environment:
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=db
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=smeflow
+      - DB_POSTGRESDB_USER=smeflow
+      - DB_POSTGRESDB_PASSWORD=smeflow123
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=admin123
+    volumes:
+      - n8n_data:/home/node/.n8n
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
+  redis_data:
+  signoz_clickhouse_data:
+  n8n_data:

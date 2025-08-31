@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: smeflow-app
+  labels:
+    app: smeflow
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: smeflow
+  template:
+    metadata:
+      labels:
+        app: smeflow
+    spec:
+      containers:
+      - name: smeflow
+        image: smeflow:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: smeflow-secrets
+              key: database-url
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: smeflow-service
+spec:
+  selector:
+    app: smeflow
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+  type: LoadBalancer

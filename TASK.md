@@ -1,0 +1,522 @@
+# SMEFlow Monolith MVP Development Tasks
+
+## Project Overview
+
+**Target**: SMEFlow v0.1 Monolith MVP (August 2025)
+**Goal**: Single Docker container deployment supporting 1-10 tenants with core APA functionality
+**Timeline**: 8-12 weeks development cycle
+
+---
+
+## 🎯 MVP Success Criteria
+
+### Core Functionality
+
+- [ ] Multi-tenant agent system with basic Automator, Mentor, Supervisor agents
+- [ ] Workflow orchestration using LangGraph with self-healing capabilities
+- [ ] No-code workflow builder via Flowise integration
+- [ ] Basic integration layer with n8N for local African services
+- [ ] Multi-tenant PostgreSQL database with schema isolation
+- [ ] Keycloak authentication with tenant-based RBAC
+- [ ] Basic observability with Langfuse for LLM cost tracking
+- [ ] Docker containerization for single-server deployment
+
+### Business Value
+
+- [ ] Support for 3 core templates: Product Recommender, Local Discovery, 360 Support Agent
+- [ ] African market integrations: M-Pesa, Paystack, Jumia APIs
+- [ ] Multi-language support (English, Swahili, Hausa minimum)
+- [ ] Basic compliance logging for GDPR/POPIA requirements
+
+---
+
+## 📋 Task Breakdown by Component
+
+## Phase 1: Foundation & Infrastructure (Weeks 1-2)
+
+### 1.1 Project Setup & Environment
+
+**Priority**: Critical | **Effort**: 3 days | **Dependencies**: None
+
+#### Tasks:
+
+- [x] **SETUP-001**: Initialize Python project structure with proper packaging
+  - [x] Create `smeflow/` package with `__init__.py`
+  - [x] Setup `pyproject.toml` with dependencies
+  - [x] Configure CLI entry point with `__main__.py`
+  - **Acceptance**: `python -m smeflow --version` works - ✅ READY
+
+- [x] **SETUP-002**: Configure development environment
+  - [x] Setup VS Code workspace with extensions from `.vscode/extensions.json`
+  - [x] Configure ESLint, Prettier for JavaScript components
+  - [x] Setup pre-commit hooks for code quality
+  - **Acceptance**: All linting and formatting rules pass - ✅ READY
+
+- [x] **SETUP-003**: Docker containerization setup
+  - [x] Create multi-stage Dockerfile for production deployment
+  - [x] Setup docker-compose.yml for development environment
+  - [x] Configure environment variables and secrets management
+  - **Acceptance**: `docker-compose up` starts all services - ✅ READY
+
+### 1.2 Database Foundation
+
+**Priority**: Critical | **Effort**: 4 days | **Dependencies**: SETUP-001
+
+#### Tasks:
+
+- [x] **DB-001**: PostgreSQL multi-tenant schema design
+  - [x] Implement tenant isolation with separate schemas
+  - [x] Create core tables: tenants, agents, workflows, logs, integrations
+  - [x] Setup database migrations with Alembic
+  - **Acceptance**: Multi-tenant database creates and isolates data correctly - ✅ COMPLETE
+
+- [x] **DB-002**: Database connection and ORM setup
+  - [x] Configure SQLAlchemy with async support
+  - [x] Implement tenant-aware database session management
+  - [x] Create base models and repository patterns
+  - **Acceptance**: CRUD operations work with tenant isolation - COMPLETE
+
+- [x] **DB-003**: Redis caching layer implementation
+  - [x] Setup Redis connection with connection pooling
+  - [x] Implement tenant-aware cache keys
+  - [x] Add cache health monitoring
+  - [x] Configure connection pooling
+  - **Acceptance**: Cache operations reduce database load by 50% - READY
+
+### 1.3 Authentication & Security
+
+**Priority**: Critical | **Effort**: 5 days | **Dependencies**: DB-001
+
+#### Tasks:
+
+- [ ] **AUTH-001**: Keycloak integration setup
+  - Deploy Keycloak in Docker container
+  - Configure realms for multi-tenancy
+  - Setup OAuth 2.0/OpenID Connect flows
+  - **Acceptance**: Users can authenticate and receive JWT tokens
+
+- [ ] **AUTH-002**: RBAC implementation with Cerbos
+  - Deploy Cerbos policy engine
+  - Define basic policies for tenant isolation
+  - Implement authorization middleware
+  - **Acceptance**: Users can only access their tenant's resources
+
+- [ ] **AUTH-003**: API security framework
+  - Implement JWT token validation middleware
+  - Setup rate limiting and request throttling
+  - Configure CORS and security headers
+  - **Acceptance**: API endpoints are secured and rate-limited
+
+### 1.4 Infrastructure
+
+**Priority**: Critical | **Effort**: 4 days | **Dependencies**: SETUP-003
+
+#### Tasks:
+
+- [x] **INFRA-001**: Nginx reverse proxy configuration
+  - [x] SSL/TLS termination with Let's Encrypt
+  - [x] Rate limiting and security headers
+  - [x] WebSocket support for real-time features
+  - **Acceptance**: Production-ready reverse proxy with SSL - ✅ READY
+
+- [x] **INFRA-002**: Production deployment configuration
+  - [x] Docker Compose production setup
+  - [x] SSL certificate automation with Certbot
+  - [x] Environment variable templates
+  - **Acceptance**: One-command production deployment - ✅ READY
+
+- [x] **INFRA-003**: Security hardening
+  - [x] HTTPS redirects and HSTS headers
+  - [x] Rate limiting for API endpoints
+  - [x] Network isolation with Docker networks
+  - **Acceptance**: Security best practices implemented - ✅ READY
+
+---
+
+## 📝 Discovered During Work
+
+### Phase 1 Additional Tasks Completed:
+
+- [x] **API-001**: Basic FastAPI structure with health endpoints
+- [x] **TEST-001**: Pytest framework setup with coverage reporting
+- [x] **LOG-001**: Structured logging with structlog integration
+- [x] **DOC-001**: Development environment documentation (README.dev.md)
+- [x] **CACHE-001**: Redis cache manager with tenant isolation
+- [x] **CLI-001**: Command-line interface with version support
+- [x] **ENV-001**: Pre-commit hooks and development tooling
+
+## Phase 2: Core Agent System (Weeks 3-4)
+
+### 2.1 Agent Layer Foundation
+
+**Priority**: Critical | **Effort**: 6 days | **Dependencies**: AUTH-001, DB-002
+
+#### Tasks:
+
+- [ ] **AGENT-001**: LangChain agent framework setup
+  - Integrate LangChain with custom agent base classes
+  - Implement Automator, Mentor, Supervisor agent types
+  - Setup LLM provider integrations (OpenAI, Anthropic)
+  - **Acceptance**: Basic agents can be created and execute simple tasks
+
+- [ ] **AGENT-002**: Agent configuration and persistence
+  - Implement agent configuration storage in JSONB
+  - Create agent lifecycle management (create, update, delete, activate)
+  - Setup tenant-specific agent isolation
+  - **Acceptance**: Agents persist configurations and maintain tenant boundaries
+
+- [ ] **AGENT-003**: LLM integration and cost tracking
+  - Integrate multiple LLM providers with fallback mechanisms
+  - Implement token usage tracking per tenant
+  - Setup response caching for cost optimization
+  - **Acceptance**: LLM calls are tracked, cached, and cost-optimized
+
+### 2.2 Workflow Engine
+
+**Priority**: Critical | **Effort**: 7 days | **Dependencies**: AGENT-001
+
+#### Tasks:
+
+- [ ] **WORKFLOW-001**: LangGraph workflow orchestration
+  - Setup LangGraph for stateful workflow management
+  - Implement basic workflow nodes and edges
+  - Create workflow persistence and state management
+  - **Acceptance**: Simple workflows can be created and executed
+
+- [ ] **WORKFLOW-002**: Self-healing workflow capabilities
+  - Implement error handling and retry mechanisms
+  - Setup workflow state recovery after failures
+  - Create dynamic routing based on conditions
+  - **Acceptance**: Workflows recover from failures and adapt to changes
+
+- [ ] **WORKFLOW-003**: Workflow templates system
+  - Create template engine for reusable workflows
+  - Implement Product Recommender workflow template
+  - Setup template versioning and updates
+  - **Acceptance**: Templates can be instantiated and customized per tenant
+
+## Phase 3: Integration & UI Layer (Weeks 5-6)
+
+### 3.1 Flowise Integration
+
+**Priority**: High | **Effort**: 5 days | **Dependencies**: WORKFLOW-001
+
+#### Tasks:
+
+- [ ] **UI-001**: Flowise deployment and configuration
+  - Deploy Flowise in Docker container
+  - Configure custom nodes for SMEFlow agents
+  - Setup tenant-aware workspace isolation
+  - **Acceptance**: Flowise UI loads and can create basic workflows
+
+- [ ] **UI-002**: Custom Flowise nodes for SMEFlow
+  - Create custom nodes for Automator, Mentor, Supervisor agents
+  - Implement SMEFlow-specific workflow components
+  - Setup node configuration and validation
+  - **Acceptance**: Custom nodes appear in Flowise and can be configured
+
+- [ ] **UI-003**: Workflow builder integration
+  - Connect Flowise workflows to LangGraph execution engine
+  - Implement workflow export/import functionality
+  - Setup real-time workflow monitoring
+  - **Acceptance**: Workflows created in Flowise execute in LangGraph
+
+### 3.2 n8N Integration Layer
+
+**Priority**: High | **Effort**: 6 days | **Dependencies**: WORKFLOW-002
+
+#### Tasks:
+
+- [ ] **INTEGRATION-001**: n8N deployment and setup
+  - Deploy n8N in Docker container
+  - Configure webhook endpoints for workflow triggers
+  - Setup credential management for external services
+  - **Acceptance**: n8N can receive webhooks and execute workflows
+
+- [ ] **INTEGRATION-002**: African market integrations
+  - Implement M-Pesa API integration for payments
+  - Setup Paystack integration for card payments
+  - Create Jumia API connector for e-commerce
+  - **Acceptance**: Payment and e-commerce integrations work end-to-end
+
+- [ ] **INTEGRATION-003**: Communication integrations
+  - Setup WhatsApp Business API integration
+  - Implement SMS gateway for notifications
+  - Create email integration for automated communications
+  - **Acceptance**: Multi-channel communication works reliably
+
+### 3.3 Voice Communication & HITL Integration
+
+**Priority**: Medium | **Effort**: 5 days | **Dependencies**: INTEGRATION-001
+
+#### Tasks:
+
+- [ ] **VOICE-001**: LiveKit voice infrastructure setup
+  - Deploy LiveKit server in Docker container
+  - Configure voice codecs for African network conditions
+  - Setup speech-to-text and text-to-speech services
+  - **Acceptance**: Voice calls can be initiated and handled
+
+- [ ] **VOICE-002**: Inbound/outbound calling system
+  - Implement call routing and management
+  - Setup DTMF support for IVR functionality
+  - Create call recording for compliance
+  - **Acceptance**: System handles inbound/outbound calls with recording
+
+- [ ] **HITL-001**: Human-in-the-Loop framework
+  - Implement escalation engine with confidence thresholds
+  - Create web-based dashboard for human intervention
+  - Setup context preservation for seamless handoffs
+  - **Acceptance**: Human agents can take over from AI agents seamlessly
+
+- [ ] **HITL-002**: HITL integration with voice and workflows
+  - Connect HITL system with voice calling
+  - Implement human approval workflows for critical decisions
+  - Setup quality assurance and feedback loops
+  - **Acceptance**: Human oversight works across all channels
+
+## Phase 4: Data Processing & Compliance (Weeks 7-8)
+
+### 4.1 Data Processing Engine
+
+**Priority**: Medium | **Effort**: 4 days | **Dependencies**: INTEGRATION-001
+
+#### Tasks:
+
+- [ ] **DATA-001**: ProAgent-inspired data processing
+  - Implement structured data analysis capabilities
+  - Setup unstructured data processing with LLMs
+  - Create data transformation pipelines
+  - **Acceptance**: System can process and analyze various data formats
+
+- [ ] **DATA-002**: Hyperlocal intelligence engine
+  - Implement neighborhood trend analysis
+  - Setup local market data aggregation
+  - Create location-aware insights generation
+  - **Acceptance**: System provides relevant local market insights
+
+### 4.2 Compliance & Observability
+
+**Priority**: Medium | **Effort**: 5 days | **Dependencies**: AGENT-003
+
+#### Tasks:
+
+- [ ] **COMPLIANCE-001**: Basic compliance logging
+  - Implement audit trail for all system actions
+  - Setup GDPR/POPIA compliance data handling
+  - Create data residency enforcement
+  - **Acceptance**: All actions are logged and comply with regulations
+
+- [ ] **OBSERVABILITY-001**: Langfuse integration
+  - Setup Langfuse for LLM call tracing
+  - Implement cost tracking per tenant
+  - Create usage analytics and reporting
+  - **Acceptance**: LLM usage is tracked and costs are monitored
+
+- [ ] **OBSERVABILITY-002**: Basic monitoring setup
+  - Implement health checks for all services
+  - Setup basic metrics collection
+  - Create alerting for critical failures
+  - **Acceptance**: System health is monitored and alerts work
+
+## Phase 5: MVP Templates & Testing (Weeks 9-10)
+
+### 5.1 Core Templates Implementation
+
+**Priority**: High | **Effort**: 6 days | **Dependencies**: UI-003, INTEGRATION-002
+
+#### Tasks:
+
+- [ ] **TEMPLATE-001**: Product Recommender template
+  - Implement AI-powered product recommendation logic
+  - Setup Jumia integration for product data
+  - Create recommendation workflow template
+  - **Acceptance**: Product recommendations work with real data
+
+- [ ] **TEMPLATE-002**: Local Discovery template
+  - Implement hyperlocal trend analysis
+  - Setup social media automation
+  - Create booking funnel automation
+  - **Acceptance**: Local discovery generates bookings
+
+- [ ] **TEMPLATE-003**: 360 Support Agent template
+  - Implement customer context aggregation
+  - Setup multi-channel support workflows
+  - Create escalation and routing logic
+  - **Acceptance**: Support agent handles customer queries effectively
+
+### 5.2 Multi-language Support
+
+**Priority**: Medium | **Effort**: 3 days | **Dependencies**: AGENT-002
+
+#### Tasks:
+
+- [ ] **I18N-001**: Language detection and processing
+  - Implement automatic language detection
+  - Setup translation services integration
+  - Create language-specific prompt templates
+  - **Acceptance**: System works in English, Swahili, and Hausa
+
+### 5.3 Testing & Quality Assurance
+
+**Priority**: Critical | **Effort**: 5 days | **Dependencies**: All previous tasks
+
+#### Tasks:
+
+- [ ] **TEST-001**: Unit and integration testing
+  - Achieve 80% code coverage with pytest
+  - Implement API endpoint testing
+  - Create database integration tests
+  - **Acceptance**: Test suite passes with 80%+ coverage
+
+- [ ] **TEST-002**: End-to-end testing
+  - Test complete workflow execution
+  - Validate multi-tenant isolation
+  - Test template functionality
+  - **Acceptance**: All core workflows work end-to-end
+
+- [ ] **TEST-003**: Performance and load testing
+  - Test system under concurrent tenant load
+  - Validate response times under load
+  - Test resource utilization
+  - **Acceptance**: System handles 10 concurrent tenants
+
+## Phase 6: Deployment & Documentation (Weeks 11-12)
+
+### 6.1 Production Deployment
+
+**Priority**: Critical | **Effort**: 4 days | **Dependencies**: TEST-003
+
+#### Tasks:
+
+- [ ] **DEPLOY-001**: Production Docker setup
+  - Create production-ready Docker images
+  - Setup environment variable management
+  - Configure logging and monitoring
+  - **Acceptance**: Production deployment works reliably
+
+- [ ] **DEPLOY-002**: Backup and recovery
+  - Implement database backup strategies
+  - Setup disaster recovery procedures
+  - Test backup restoration
+  - **Acceptance**: Data can be backed up and restored
+
+### 6.2 Documentation & Training
+
+**Priority**: Medium | **Effort**: 3 days | **Dependencies**: DEPLOY-001
+
+#### Tasks:
+
+- [ ] **DOC-001**: API documentation
+  - Generate OpenAPI specifications
+  - Create developer documentation
+  - Setup API testing playground
+  - **Acceptance**: APIs are fully documented
+
+- [ ] **DOC-002**: User documentation
+  - Create user guides for each template
+  - Setup onboarding documentation
+  - Create troubleshooting guides
+  - **Acceptance**: Users can onboard and use the system
+
+---
+
+## 🚀 Quick Start Commands
+
+### Development Setup
+
+```bash
+# Clone and setup environment
+git clone <repository>
+cd smeflow
+.\.venv\Scripts\Activate.ps1
+uv pip install -r requirements.txt
+
+# Start development environment
+docker-compose up -d
+
+# Run tests
+pytest --cov=smeflow tests/
+
+# Start SMEFlow application
+python -m smeflow.main
+```
+
+### Service URLs (Development)
+
+- **SMEFlow API**: http://localhost:8000
+- **Flowise UI**: http://localhost:3000
+- **n8n Workflows**: http://localhost:5678
+- **Keycloak Auth**: http://localhost:8080
+- **Langfuse Observability**: http://localhost:3001
+
+---
+
+## 📊 Success Metrics
+
+### Technical KPIs
+
+- [ ] **Response Time**: <500ms for 95% of API requests
+- [ ] **Uptime**: 99.5% availability during testing
+- [ ] **Test Coverage**: 80%+ code coverage
+- [ ] **Multi-tenancy**: Support 10 concurrent tenants
+
+### Business KPIs
+
+- [ ] **Template Effectiveness**: 20% improvement in target metrics
+- [ ] **User Onboarding**: <5 minutes to create first workflow
+- [ ] **Integration Success**: 3+ African market integrations working
+- [ ] **Language Support**: 3+ African languages supported
+
+---
+
+## 🔄 Dependencies & Critical Path
+
+### Critical Path Tasks:
+
+1. SETUP-001 → DB-001 → AUTH-001 → AGENT-001 → WORKFLOW-001 → UI-001 → TEMPLATE-001 → TEST-001 → DEPLOY-001
+
+### Parallel Development Streams:
+
+- **Infrastructure**: SETUP → DB → AUTH
+- **Core Platform**: AGENT → WORKFLOW → UI
+- **Integrations**: INTEGRATION → DATA
+- **Features**: TEMPLATE → I18N
+- **Quality**: TEST → DOC → DEPLOY
+
+---
+
+## ⚠️ Risk Mitigation
+
+### Technical Risks
+
+- **LLM Cost Overrun**: Implement aggressive caching and usage limits
+- **Performance Issues**: Load test early and optimize database queries
+- **Integration Failures**: Build fallback mechanisms for external APIs
+
+### Timeline Risks
+
+- **Scope Creep**: Stick to MVP features only
+- **Dependency Delays**: Identify alternative solutions early
+- **Resource Constraints**: Prioritize critical path tasks
+
+---
+
+## 📝 Notes
+
+### Development Priorities
+
+1. **Focus on African SME needs**: Local languages, currencies, cultural context
+2. **Prioritize compliance**: GDPR, POPIA, CBN requirements from day one
+3. **Emphasize measurable outcomes**: Track quantified business impact
+4. **Plan for microservices**: Design with future decomposition in mind
+5. **Maintain cost-effectiveness**: Monitor and optimize LLM usage costs
+
+### Quality Gates
+
+- All tasks must pass automated testing
+- Security review required for authentication components
+- Performance validation required for workflow engine
+- Compliance review required for data handling components
+
+This task breakdown provides a comprehensive roadmap for delivering the SMEFlow Monolith MVP within the target timeline while maintaining quality and addressing the unique needs of African SMEs.

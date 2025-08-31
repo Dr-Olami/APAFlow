@@ -1,0 +1,36 @@
+name: "Security Analysis Config"
+
+disable-default-queries: false
+
+queries:
+  - uses: security-extended
+  - uses: security-and-quality
+
+# Custom queries for Keycloak/Cerbos security patterns
+query-filters:
+  - exclude:
+      id: js/unused-local-variable
+  - include:
+      tags:
+        - security
+        - authentication
+        - authorization
+
+# Paths to analyze
+paths:
+  - src/
+  - lib/
+  - components/
+  - "**/*.py"
+  - "**/*.js"
+  - "**/*.ts"
+  - "**/*.tsx"
+
+# Paths to ignore
+paths-ignore:
+  - node_modules/
+  - .venv/
+  - "**/*.test.js"
+  - "**/*.spec.ts"
+  - dist/
+  - build/

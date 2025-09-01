@@ -145,6 +145,8 @@
 - [x] **CLI-001**: Command-line interface with version support
 - [x] **ENV-001**: Pre-commit hooks and development tooling
 
+---
+
 ## Phase 2: Core Agent System (Weeks 3-4)
 
 ### 2.1 Agent Layer Foundation

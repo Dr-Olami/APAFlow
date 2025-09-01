@@ -1,0 +1,67 @@
+/* SMEFlow Custom Theme for African Markets */
+:root {
+  --smeflow-primary: #2563eb;
+  --smeflow-secondary: #059669;
+  --smeflow-accent: #f59e0b;
+  --smeflow-dark: #1f2937;
+  --smeflow-light: #f9fafb;
+}
+
+.login-pf body {
+  background: linear-gradient(135deg, var(--smeflow-primary) 0%, var(--smeflow-secondary) 100%);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.card-pf {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.login-pf-header h1 {
+  color: var(--smeflow-dark);
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.login-pf-header h1::after {
+  content: " - Empowering African SMEs";
+  font-size: 0.8rem;
+  color: var(--smeflow-secondary);
+  font-weight: 400;
+}
+
+.btn-primary {
+  background-color: var(--smeflow-primary);
+  border-color: var(--smeflow-primary);
+  border-radius: 8px;
+  font-weight: 600;
+  padding: 12px 24px;
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  background-color: #1d4ed8;
+  border-color: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.form-control {
+  border-radius: 8px;
+  border: 2px solid #e5e7eb;
+  padding: 12px 16px;
+  transition: border-color 0.2s ease;
+}
+
+.form-control:focus {
+  border-color: var(--smeflow-primary);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* African language support indicators */
+.kc-locale-dropdown::before {
+  content: "🌍 ";
+  margin-right: 4px;
+}

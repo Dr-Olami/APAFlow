@@ -45,6 +45,15 @@ class Settings(BaseSettings):
     KEYCLOAK_CLIENT_SECRET: Optional[str] = Field(
         default=None, description="Keycloak client secret"
     )
+    KEYCLOAK_ADMIN_USERNAME: str = Field(
+        default="admin", description="Keycloak admin username"
+    )
+    KEYCLOAK_ADMIN_PASSWORD: str = Field(
+        default="admin_password", description="Keycloak admin password"
+    )
+    
+    # Domain Configuration
+    DOMAIN: str = Field(default="localhost", description="Application domain")
     
     # JWT
     JWT_SECRET_KEY: str = Field(
@@ -104,3 +113,8 @@ class Settings(BaseSettings):
 
 # Global settings instance
 settings = Settings()
+
+
+def get_settings() -> Settings:
+    """Get application settings instance."""
+    return settings

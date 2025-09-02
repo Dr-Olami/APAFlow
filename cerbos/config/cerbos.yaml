@@ -1,0 +1,25 @@
+# Cerbos Configuration for SMEFlow Multi-tenant RBAC
+server:
+  httpListenAddr: ":3593"
+  grpcListenAddr: ":3592"
+  requestLimits:
+    maxActionsPerResource: 50
+    maxResourcesPerRequest: 50
+
+storage:
+  driver: "disk"
+  disk:
+    directory: /policies
+    watchForChanges: true
+
+compile:
+  output: /tmp/cerbos
+
+audit:
+  enabled: true
+  backend: local
+  local:
+    storagePath: /tmp/audit.log
+
+telemetry:
+  disabled: false

@@ -45,12 +45,12 @@ class Settings(BaseSettings):
     KEYCLOAK_CLIENT_SECRET: Optional[str] = Field(
         default=None, description="Keycloak client secret"
     )
-    KEYCLOAK_ADMIN_USERNAME: str = Field(
-        default="admin", description="Keycloak admin username"
-    )
-    KEYCLOAK_ADMIN_PASSWORD: str = Field(
-        default="admin_password", description="Keycloak admin password"
-    )
+    keycloak_admin_username: str = Field(default="admin", env="KEYCLOAK_ADMIN_USERNAME")
+    keycloak_admin_password: str = Field(default="admin_password", env="KEYCLOAK_ADMIN_PASSWORD")
+    
+    # Cerbos Configuration
+    cerbos_host: str = Field(default="localhost", env="CERBOS_HOST")
+    cerbos_port: int = Field(default=3593, env="CERBOS_PORT")
     
     # Domain Configuration
     DOMAIN: str = Field(default="localhost", description="Application domain")

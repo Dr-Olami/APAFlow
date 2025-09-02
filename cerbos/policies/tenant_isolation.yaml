@@ -1,0 +1,76 @@
+# Tenant Isolation Policy for SMEFlow Multi-tenant RBAC
+---
+apiVersion: api.cerbos.dev/v1
+resourcePolicy:
+  version: "default"
+  resource: "*"
+  importDerivedRoles:
+    - tenant_roles
+  rules:
+    # Tenant isolation - users can only access resources in their tenant
+    - actions: ["*"]
+      effect: EFFECT_DENY
+      condition:
+        match:
+          expr: P.tenant_id != R.tenant_id
+      name: deny_cross_tenant_access
+
+    # Allow tenant admins full access to tenant resources
+    - actions: ["*"]
+      effect: EFFECT_ALLOW
+      derivedRoles:
+        - tenant_admin
+      condition:
+        match:
+          expr: P.tenant_id == R.tenant_id
+      name: tenant_admin_full_access
+
+    # Allow tenant users read access to shared tenant resources
+    - actions: ["view", "read"]
+      effect: EFFECT_ALLOW
+      derivedRoles:
+        - tenant_user
+      condition:
+        match:
+          all:
+            of:
+              - expr: P.tenant_id == R.tenant_id
+              - expr: R.visibility == "tenant" || R.visibility == "public"
+      name: tenant_user_read_access
+
+    # Allow resource owners to manage their own resources
+    - actions: ["view", "read", "edit", "delete"]
+      effect: EFFECT_ALLOW
+      condition:
+        match:
+          all:
+            of:
+              - expr: P.tenant_id == R.tenant_id
+              - expr: P.id == R.owner_id
+      name: owner_resource_access
+
+---
+apiVersion: api.cerbos.dev/v1
+derivedRoles:
+  name: tenant_roles
+  definitions:
+    - name: tenant_admin
+      parentRoles: ["admin", "owner"]
+      condition:
+        match:
+          expr: P.tenant_id == R.tenant_id
+
+    - name: tenant_user
+      parentRoles: ["user", "member", "viewer"]
+      condition:
+        match:
+          expr: P.tenant_id == R.tenant_id
+
+    - name: tenant_agent_manager
+      parentRoles: ["agent_manager", "workflow_manager"]
+      condition:
+        match:
+          all:
+            of:
+              - expr: P.tenant_id == R.tenant_id
+              - expr: R.resource_type == "agent" || R.resource_type == "workflow"

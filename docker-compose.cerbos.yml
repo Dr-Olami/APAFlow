@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  cerbos:
+    image: ghcr.io/cerbos/cerbos:0.33.0
+    container_name: smeflow-cerbos
+    ports:
+      - "3592:3592"  # gRPC port
+      - "3593:3593"  # HTTP port
+    volumes:
+      - ./cerbos/policies:/policies:ro
+      - ./cerbos/config:/config:ro
+    command: ["server", "--config=/config/cerbos.yaml"]
+    networks:
+      - smeflow-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "cerbos", "healthcheck", "--config=/config/cerbos.yaml"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+networks:
+  smeflow-network:
+    external: true

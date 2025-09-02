@@ -1,0 +1,67 @@
+# Agent Resource Policy for SMEFlow RBAC
+---
+apiVersion: api.cerbos.dev/v1
+resourcePolicy:
+  version: "default"
+  resource: "agent"
+  importDerivedRoles:
+    - tenant_roles
+  rules:
+    # Agent creation - requires agent_manager role or higher
+    - actions: ["create"]
+      effect: EFFECT_ALLOW
+      derivedRoles:
+        - tenant_admin
+        - tenant_agent_manager
+      condition:
+        match:
+          expr: P.tenant_id == R.tenant_id
+      name: agent_creation_access
+
+    # Agent execution - users can run agents they have access to
+    - actions: ["execute", "run"]
+      effect: EFFECT_ALLOW
+      derivedRoles:
+        - tenant_user
+        - tenant_agent_manager
+        - tenant_admin
+      condition:
+        match:
+          all:
+            of:
+              - expr: P.tenant_id == R.tenant_id
+              - expr: R.visibility == "tenant" || R.visibility == "public" || P.id == R.owner_id
+      name: agent_execution_access
+
+    # Agent configuration - only managers and owners
+    - actions: ["edit", "configure", "update"]
+      effect: EFFECT_ALLOW
+      condition:
+        match:
+          all:
+            of:
+              - expr: P.tenant_id == R.tenant_id
+              - expr: P.id == R.owner_id || "agent_manager" in P.roles || "admin" in P.roles
+      name: agent_configuration_access
+
+    # Agent deletion - only owners and admins
+    - actions: ["delete"]
+      effect: EFFECT_ALLOW
+      condition:
+        match:
+          all:
+            of:
+              - expr: P.tenant_id == R.tenant_id
+              - expr: P.id == R.owner_id || "admin" in P.roles
+      name: agent_deletion_access
+
+    # Premium features - subscription tier restrictions
+    - actions: ["advanced_analytics", "custom_models"]
+      effect: EFFECT_ALLOW
+      condition:
+        match:
+          all:
+            of:
+              - expr: P.tenant_id == R.tenant_id
+              - expr: P.subscription_tier == "premium" || P.subscription_tier == "enterprise"
+      name: premium_agent_features

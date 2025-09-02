@@ -1,0 +1,60 @@
+# Workflow Resource Policy for SMEFlow RBAC
+---
+apiVersion: api.cerbos.dev/v1
+resourcePolicy:
+  version: "default"
+  resource: "workflow"
+  importDerivedRoles:
+    - tenant_roles
+  rules:
+    # Workflow creation - requires workflow_manager role or higher
+    - actions: ["create"]
+      effect: EFFECT_ALLOW
+      derivedRoles:
+        - tenant_admin
+        - tenant_agent_manager
+      condition:
+        match:
+          expr: P.tenant_id == R.tenant_id
+      name: workflow_creation_access
+
+    # Workflow execution - users can run workflows they have access to
+    - actions: ["execute", "run", "trigger"]
+      effect: EFFECT_ALLOW
+      derivedRoles:
+        - tenant_user
+        - tenant_agent_manager
+        - tenant_admin
+      condition:
+        match:
+          all:
+            of:
+              - expr: P.tenant_id == R.tenant_id
+              - expr: R.visibility == "tenant" || R.visibility == "public" || P.id == R.owner_id
+      name: workflow_execution_access
+
+    # Workflow management - only managers and owners
+    - actions: ["edit", "configure", "update", "pause", "resume"]
+      effect: EFFECT_ALLOW
+      condition:
+        match:
+          all:
+            of:
+              - expr: P.tenant_id == R.tenant_id
+              - expr: P.id == R.owner_id || "workflow_manager" in P.roles || "admin" in P.roles
+      name: workflow_management_access
+
+    # Workflow monitoring - read access to logs and metrics
+    - actions: ["view_logs", "view_metrics", "monitor"]
+      effect: EFFECT_ALLOW
+      derivedRoles:
+        - tenant_user
+        - tenant_agent_manager
+        - tenant_admin
+      condition:
+        match:
+          all:
+            of:
+              - expr: P.tenant_id == R.tenant_id
+              - expr: R.visibility == "tenant" || R.visibility == "public" || P.id == R.owner_id
+      name: workflow_monitoring_access

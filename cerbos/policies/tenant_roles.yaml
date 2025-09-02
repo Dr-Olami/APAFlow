@@ -1,0 +1,24 @@
+apiVersion: api.cerbos.dev/v1
+derivedRoles:
+  name: tenant_roles
+  definitions:
+    - name: tenant_admin
+      parentRoles: ["admin", "owner"]
+      condition:
+        match:
+          expr: P.tenant_id == R.tenant_id
+
+    - name: tenant_user
+      parentRoles: ["user", "member", "viewer"]
+      condition:
+        match:
+          expr: P.tenant_id == R.tenant_id
+
+    - name: tenant_agent_manager
+      parentRoles: ["agent_manager", "workflow_manager"]
+      condition:
+        match:
+          all:
+            of:
+              - expr: P.tenant_id == R.tenant_id
+              - expr: R.resource_type == "agent" || R.resource_type == "workflow"

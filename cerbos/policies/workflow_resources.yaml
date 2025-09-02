@@ -36,6 +36,7 @@ resourcePolicy:
     # Workflow management - only managers and owners
     - actions: ["edit", "configure", "update", "pause", "resume"]
       effect: EFFECT_ALLOW
+      roles: ["workflow_manager", "admin"]
       condition:
         match:
           all:

@@ -36,6 +36,7 @@ resourcePolicy:
     # Agent configuration - only managers and owners
     - actions: ["edit", "configure", "update"]
       effect: EFFECT_ALLOW
+      roles: ["agent_manager", "admin"]
       condition:
         match:
           all:
@@ -47,6 +48,7 @@ resourcePolicy:
     # Agent deletion - only owners and admins
     - actions: ["delete"]
       effect: EFFECT_ALLOW
+      roles: ["admin"]
       condition:
         match:
           all:
@@ -58,6 +60,7 @@ resourcePolicy:
     # Premium features - subscription tier restrictions
     - actions: ["advanced_analytics", "custom_models"]
       effect: EFFECT_ALLOW
+      roles: ["*"]
       condition:
         match:
           all:

@@ -10,6 +10,7 @@ resourcePolicy:
     # Tenant isolation - users can only access resources in their tenant
     - actions: ["*"]
       effect: EFFECT_DENY
+      roles: ["*"]
       condition:
         match:
           expr: P.tenant_id != R.tenant_id

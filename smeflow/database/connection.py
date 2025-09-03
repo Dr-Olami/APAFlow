@@ -162,3 +162,23 @@ class DatabaseManager:
 
 # Global database manager instance
 db_manager = DatabaseManager()
+
+
+# Convenience functions for dependency injection
+async def get_db_session(tenant_id: Optional[str] = None) -> AsyncGenerator[AsyncSession, None]:
+    """
+    Get database session for dependency injection.
+    
+    Args:
+        tenant_id: Optional tenant ID for multi-tenant operations.
+        
+    Yields:
+        AsyncSession: Database session.
+    """
+    async with db_manager.get_session(tenant_id) as session:
+        yield session
+
+
+def get_db():
+    """FastAPI dependency for database session."""
+    return get_db_session()

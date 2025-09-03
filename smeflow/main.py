@@ -14,6 +14,15 @@ from .core.config import settings
 from .core.cache import cache_manager
 from smeflow.core.logging import setup_logging
 from smeflow.api.routes import api_router
+from .auth.security_middleware import (
+    SecurityHeadersMiddleware,
+    RateLimitMiddleware,
+    RateLimiter,
+    create_security_config,
+    setup_cors_middleware
+)
+from .auth.jwt_middleware import JWTMiddleware
+from .auth.keycloak_client import KeycloakClient
 
 
 def create_app() -> FastAPI:
@@ -31,14 +40,22 @@ def create_app() -> FastAPI:
         redoc_url="/redoc" if settings.DEBUG else None,
     )
     
-    # CORS middleware
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=settings.ALLOWED_ORIGINS,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+    # Create security configuration
+    security_config = create_security_config()
+    
+    # Setup CORS middleware with African market optimizations
+    setup_cors_middleware(app, security_config)
+    
+    # Add security headers middleware
+    app.add_middleware(SecurityHeadersMiddleware, config=security_config)
+    
+    # Add rate limiting middleware
+    rate_limiter = RateLimiter(cache_manager, security_config)
+    app.add_middleware(RateLimitMiddleware, rate_limiter=rate_limiter)
+    
+    # Add JWT authentication middleware
+    keycloak_client = KeycloakClient()
+    app.add_middleware(JWTMiddleware, keycloak_client=keycloak_client)
     
     # Include API routes
     app.include_router(api_router)
@@ -49,12 +66,15 @@ def create_app() -> FastAPI:
         """Initialize services on startup."""
         await database_manager.initialize()
         await cache_manager.initialize()
+        # Initialize Keycloak client
+        await keycloak_client.initialize()
     
     @app.on_event("shutdown")
     async def shutdown_event():
         """Cleanup services on shutdown."""
         await database_manager.close()
         await cache_manager.close()
+        await keycloak_client.close()
     
     # Health check endpoint
     @app.get("/health")

@@ -105,6 +105,22 @@ class Settings(BaseSettings):
         default=100, description="Maximum concurrent requests"
     )
     
+    # N8n Integration Settings
+    N8N_BASE_URL: Optional[str] = Field(default="http://localhost:5678", description="N8n instance URL")
+    N8N_API_KEY: Optional[str] = Field(default=None, description="N8n API key")
+    N8N_TIMEOUT: Optional[int] = Field(default=30, description="N8n request timeout")
+    N8N_MAX_RETRIES: Optional[int] = Field(default=3, description="N8n max retry attempts")
+    N8N_TENANT_PREFIX: Optional[str] = Field(default="smeflow", description="N8n tenant prefix")
+    
+    # API Security Settings
+    RATE_LIMIT_PER_MINUTE: Optional[int] = Field(default=60, description="Rate limit per minute")
+    RATE_LIMIT_PER_HOUR: Optional[int] = Field(default=1000, description="Rate limit per hour")
+    RATE_LIMIT_BURST: Optional[int] = Field(default=10, description="Burst rate limit")
+    RATE_LIMIT_BLOCK_DURATION: Optional[int] = Field(default=15, description="Block duration in minutes")
+    CORS_ORIGINS: Optional[str] = Field(default=None, description="Comma-separated CORS origins")
+    ENABLE_SECURITY_HEADERS: Optional[bool] = Field(default=True, description="Enable security headers")
+    HSTS_MAX_AGE: Optional[int] = Field(default=31536000, description="HSTS max age in seconds")
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

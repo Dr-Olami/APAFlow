@@ -14,6 +14,7 @@ from fastapi import HTTPException, Request, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
+from pydantic import BaseModel
 
 from ..core.config import get_settings
 from ..database.models import Tenant
@@ -23,6 +24,18 @@ logger = logging.getLogger(__name__)
 
 # Security scheme for FastAPI
 security = HTTPBearer()
+
+
+class UserInfo(BaseModel):
+    """User information model for authentication."""
+    
+    user_id: str
+    username: Optional[str] = None
+    email: Optional[str] = None
+    tenant_id: str
+    realm: str = "smeflow"  # Default realm
+    roles: List[str] = []
+    token_type: str = "Bearer"
 
 
 class JWTMiddleware(BaseHTTPMiddleware):

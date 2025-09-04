@@ -7,14 +7,8 @@ from datetime import datetime
 from typing import Optional
 
 from sqlalchemy import (
-    Boolean,
-    DateTime,
-    Float,
-    ForeignKey,
-    Integer,
-    String,
-    Text,
-    UniqueConstraint,
+    Column, Integer, String, Text, Boolean, DateTime, ForeignKey,
+    JSON, Index, UniqueConstraint, CheckConstraint, Numeric, Float
 )
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -52,6 +46,7 @@ class Tenant(Base):
     users = relationship("User", back_populates="tenant", cascade="all, delete-orphan")
     agents = relationship("Agent", back_populates="tenant", cascade="all, delete-orphan")
     workflows = relationship("Workflow", back_populates="tenant", cascade="all, delete-orphan")
+    llm_usage = relationship("LLMUsage", back_populates="tenant", cascade="all, delete-orphan")
 
 
 class User(Base):
@@ -114,6 +109,7 @@ class Agent(Base):
     # Relationships
     tenant = relationship("Tenant", back_populates="agents")
     executions = relationship("AgentExecution", back_populates="agent", cascade="all, delete-orphan")
+    llm_usage = relationship("LLMUsage", back_populates="agent")
 
 
 class Workflow(Base):
@@ -236,6 +232,118 @@ class Integration(Base):
     
     __table_args__ = (
         UniqueConstraint("tenant_id", "provider", name="uq_tenant_integration_provider"),
+    )
+
+
+class LLMUsage(Base):
+    """
+    LLM usage tracking for cost monitoring and analytics.
+    """
+    __tablename__ = "llm_usage"
+    
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    tenant_id: Mapped[str] = mapped_column(
+        String(50), ForeignKey("tenants.id"), nullable=False, index=True
+    )
+    agent_id: Mapped[Optional[uuid.UUID]] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("agents.id"), nullable=True, index=True
+    )
+    
+    # LLM provider details
+    provider: Mapped[str] = mapped_column(String(50), nullable=False)  # openai, anthropic
+    model: Mapped[str] = mapped_column(String(100), nullable=False)  # gpt-4o, claude-3-sonnet
+    
+    # Token usage
+    input_tokens: Mapped[int] = mapped_column(Integer, nullable=False)
+    output_tokens: Mapped[int] = mapped_column(Integer, nullable=False)
+    total_tokens: Mapped[int] = mapped_column(Integer, nullable=False)
+    
+    # Cost tracking
+    cost_usd: Mapped[float] = mapped_column(Numeric(10, 6), nullable=False)
+    cost_local: Mapped[Optional[float]] = mapped_column(Numeric(10, 2))  # NGN, KES, etc.
+    currency: Mapped[str] = mapped_column(String(3), default="USD")  # USD, NGN, KES
+    
+    # Performance metrics
+    cache_hit: Mapped[bool] = mapped_column(Boolean, default=False)
+    response_time_ms: Mapped[Optional[int]] = mapped_column(Integer)
+    
+    # Request metadata
+    request_hash: Mapped[Optional[str]] = mapped_column(String(64))  # For cache matching
+    region: Mapped[str] = mapped_column(String(10), default="NG")  # African region
+    
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), index=True
+    )
+    
+    # Relationships
+    agent = relationship("Agent", back_populates="llm_usage")
+    tenant = relationship("Tenant", back_populates="llm_usage")
+
+
+class LLMCache(Base):
+    """
+    LLM response caching for cost optimization.
+    """
+    __tablename__ = "llm_cache"
+    
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    cache_key: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
+    tenant_id: Mapped[Optional[str]] = mapped_column(
+        String(50), ForeignKey("tenants.id"), nullable=True, index=True
+    )  # NULL for global cache
+    
+    # Cache content
+    prompt_hash: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    response_data: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    
+    # Provider details
+    provider: Mapped[str] = mapped_column(String(50), nullable=False)
+    model: Mapped[str] = mapped_column(String(100), nullable=False)
+    
+    # Cache metadata
+    hit_count: Mapped[int] = mapped_column(Integer, default=0)
+    expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+
+
+class ProviderHealth(Base):
+    """
+    LLM provider health monitoring for fallback decisions.
+    """
+    __tablename__ = "provider_health"
+    
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    provider: Mapped[str] = mapped_column(String(50), nullable=False)
+    region: Mapped[str] = mapped_column(String(10), nullable=False)  # NG, KE, ZA, etc.
+    
+    # Health metrics
+    is_healthy: Mapped[bool] = mapped_column(Boolean, default=True)
+    response_time_avg: Mapped[Optional[int]] = mapped_column(Integer)  # milliseconds
+    error_rate: Mapped[Optional[float]] = mapped_column(Numeric(5, 4))  # percentage (0.0-1.0)
+    success_count: Mapped[int] = mapped_column(Integer, default=0)
+    error_count: Mapped[int] = mapped_column(Integer, default=0)
+    
+    # Status tracking
+    last_success: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    last_error: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
+    last_check: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    
+    __table_args__ = (
+        UniqueConstraint("provider", "region", name="uq_provider_region_health"),
     )
 
 

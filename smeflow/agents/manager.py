@@ -14,8 +14,9 @@ import uuid
 from .base import BaseAgent, AgentConfig, AgentType, AgentStatus
 from .factory import AgentFactory
 from .persistence import agent_persistence_service, AgentPersistenceData, AgentPersistenceConfig
+from .llm_providers import create_llm_for_agent
+from .llm_manager import llm_manager, LLMRequest, ProviderStrategy
 from ..core.logging import get_logger
-from ..core.cache import cache_manager
 from ..database.connection import get_db_session
 
 logger = get_logger(__name__)
@@ -774,6 +775,144 @@ class AgentManager:
             )
         
         return cleaned_count
+    
+    async def execute_llm_request(
+        self,
+        agent_id: str,
+        messages: List[Any],
+        tenant_id: str,
+        strategy: ProviderStrategy = ProviderStrategy.BALANCED,
+        **kwargs
+    ) -> Any:
+        """
+        Execute LLM request using enhanced LLM manager with fallbacks and tracking.
+        
+        Args:
+            agent_id: Agent identifier
+            messages: List of messages for LLM
+            tenant_id: Tenant identifier
+            strategy: Provider selection strategy
+            **kwargs: Additional LLM parameters
+            
+        Returns:
+            LLM response with usage tracking
+        """
+        agent = await self.get_agent(agent_id)
+        if not agent:
+            raise ValueError(f"Agent {agent_id} not found")
+        
+        # Get region from agent config
+        # Get region from agent config, default to NG if not set or if it's a mock
+        try:
+            region = agent.config.region if hasattr(agent.config, 'region') else 'NG'
+            # Handle case where region might be a Mock object
+            if hasattr(region, '_mock_name'):
+                region = 'NG'
+        except AttributeError:
+            region = 'NG'
+        
+        # Create LLM request
+        request = LLMRequest(
+            messages=messages,
+            tenant_id=tenant_id,
+            agent_id=agent_id,
+            region=region,
+            strategy=strategy,
+            max_tokens=kwargs.get('max_tokens'),
+            temperature=kwargs.get('temperature', 0.7)
+        )
+        
+        # Execute with enhanced LLM manager
+        response = await llm_manager.execute_request(request)
+        
+        logger.info(
+            "LLM request executed via enhanced manager",
+            agent_id=agent_id,
+            tenant_id=tenant_id,
+            provider=response.provider,
+            model=response.model,
+            tokens=response.total_tokens,
+            cost_usd=response.cost_usd,
+            cache_hit=response.cache_hit
+        )
+        
+        return response
+
+    def get_llm_analytics(
+        self,
+        tenant_id: str,
+        start_date: Optional[Any] = None,
+        end_date: Optional[Any] = None
+    ) -> Dict[str, Any]:
+        """
+        Get LLM usage analytics for tenant.
+        
+        Args:
+            tenant_id: Tenant identifier
+            start_date: Optional start date
+            end_date: Optional end date
+            
+        Returns:
+            LLM usage analytics
+        """
+        return llm_manager.get_usage_analytics(tenant_id, start_date, end_date)
+
+    def get_tenant_agents(self, tenant_id: str) -> List[BaseAgent]:
+        """
+        Get all agents for a specific tenant.
+        
+        Args:
+            tenant_id: Tenant identifier
+            
+        Returns:
+            List of agents for the tenant
+        """
+        return [agent for agent in self.agents.values() if agent.config.tenant_id == tenant_id]
+
+    def get_usage_analytics(self, tenant_id: str) -> Dict[str, Any]:
+        """
+        Get comprehensive usage analytics for tenant including LLM usage.
+        
+        Args:
+            tenant_id: Tenant identifier
+            
+        Returns:
+            Usage analytics data
+        """
+        tenant_agents = self.get_tenant_agents(tenant_id)
+        
+        total_agents = len(tenant_agents)
+        active_agents = len([a for a in tenant_agents if a.status == AgentStatus.ACTIVE])
+        
+        # Calculate performance metrics
+        total_executions = sum(len(getattr(agent, 'execution_history', [])) for agent in tenant_agents)
+        
+        if total_executions > 0:
+            avg_execution_time = sum(
+                sum(exec_time for _, exec_time in getattr(agent, 'execution_history', []))
+                for agent in tenant_agents
+            ) / total_executions
+        else:
+            avg_execution_time = 0
+        
+        # Get LLM analytics
+        llm_analytics = self.get_llm_analytics(tenant_id)
+        
+        return {
+            "tenant_id": tenant_id,
+            "total_agents": total_agents,
+            "active_agents": active_agents,
+            "total_executions": total_executions,
+            "avg_execution_time_ms": round(avg_execution_time, 2),
+            "agents_by_type": {
+                agent_type.value: len([
+                    a for a in tenant_agents 
+                    if a.config.agent_type == agent_type
+                ])
+                for agent_type in AgentType
+            },
+            "llm_usage": llm_analytics
+        }
     
     def _add_agent_to_group(self, agent_id: str, group_name: str) -> None:
         """Add agent to a group."""

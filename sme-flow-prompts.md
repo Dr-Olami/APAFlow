@@ -71,6 +71,8 @@
 1. **Product Recommender** (Retail)
    - Impact: 20-30% admin time reduction
    - AI-powered recommendations with local market focus
+   - WooCommerce integration
+   - Shopify integration, 
    - Jumia integration, cultural relevance
 
 2. **Local Discovery** (Services)

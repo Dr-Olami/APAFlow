@@ -42,6 +42,9 @@
 **Workflow Types**:
 
 - **Booking Funnels**: Discovery → Booking → Rebooking automation
+  - Industry-specific templates (Consulting, Salon/Spa, Healthcare, Manufacturing)
+  - Dynamic form generation with 14+ field types
+  - African market optimizations (NGN/KES/ZAR currencies, local phone formats)
 - **Marketing Campaigns**: Hyperlocal trend analysis and campaign execution
 - **Compliance Workflows**: Automated audit trails and reporting
 - **ERP Integration**: Invoice processing and vendor management

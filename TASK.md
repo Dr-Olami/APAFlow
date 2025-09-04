@@ -166,11 +166,11 @@
   - [x] Setup LLM provider integrations (OpenAI, Anthropic)
   - **Acceptance**: Basic agents can be created and execute simple tasks - COMPLETE (2025-09-04)
 
-- [ ] **AGENT-002**: Agent configuration and persistence
-  - Implement agent configuration storage in JSONB
-  - Create agent lifecycle management (create, update, delete, activate)
-  - Setup tenant-specific agent isolation
-  - **Acceptance**: Agents persist configurations and maintain tenant boundaries
+- [x] **AGENT-002**: Agent configuration and persistence
+  - [x] Implement agent configuration storage in JSONB
+  - [x] Create agent lifecycle management (create, update, delete, activate)
+  - [x] Setup tenant-specific agent isolation
+  - **Acceptance**: Agents persist configurations and maintain tenant boundaries - COMPLETE (2025-09-04)
 
 - [ ] **AGENT-003**: LLM integration and cost tracking
   - Integrate multiple LLM providers with fallback mechanisms

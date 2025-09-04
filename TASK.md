@@ -101,7 +101,7 @@
   - [x] Implement authorization middleware
   - [x] Fix Cerbos configuration and policy validation
   - [x] Complete unit and integration testing (18/18 tests passing)
-  - **Acceptance**: Role-based access control works for tenant isolation - COMPLETE (2025-01-03)
+  - **Acceptance**: Role-based access control works for tenant isolation - COMPLETE (2025-09-03)
 
 - [x] **AUTH-003**: API security framework
   - [x] Implement JWT token validation middleware with multi-tenant support
@@ -110,7 +110,7 @@
   - [x] Integrate security middleware stack with FastAPI application
   - [x] Add security configuration to environment variables
   - [x] Create comprehensive API security integration tests
-  - **Acceptance**: API endpoints are secured and rate-limited - COMPLETE (2025-01-03)
+  - **Acceptance**: API endpoints are secured and rate-limited - COMPLETE (2025-09-03)
 
 ### 1.4 Infrastructure
 
@@ -160,11 +160,11 @@
 
 #### Tasks:
 
-- [ ] **AGENT-001**: LangChain agent framework setup
-  - Integrate LangChain with custom agent base classes
-  - Implement Automator, Mentor, Supervisor agent types
-  - Setup LLM provider integrations (OpenAI, Anthropic)
-  - **Acceptance**: Basic agents can be created and execute simple tasks
+- [x] **AGENT-001**: LangChain agent framework setup
+  - [x] Integrate LangChain with custom agent base classes
+  - [x] Implement Automator, Mentor, Supervisor agent types
+  - [x] Setup LLM provider integrations (OpenAI, Anthropic)
+  - **Acceptance**: Basic agents can be created and execute simple tasks - COMPLETE (2025-09-04)
 
 - [ ] **AGENT-002**: Agent configuration and persistence
   - Implement agent configuration storage in JSONB

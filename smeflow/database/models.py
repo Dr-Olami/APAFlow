@@ -347,6 +347,74 @@ class ProviderHealth(Base):
     )
 
 
+class WorkflowTemplate(Base):
+    """
+    Workflow template model for versioned template management.
+    """
+    __tablename__ = "workflow_templates"
+    
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    industry_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(Text)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
+    
+    # Template metadata
+    supported_regions: Mapped[list] = mapped_column(JSONB, default=list)
+    supported_currencies: Mapped[list] = mapped_column(JSONB, default=list)
+    supported_languages: Mapped[list] = mapped_column(JSONB, default=list)
+    
+    # Relationships
+    versions = relationship("WorkflowTemplateVersion", back_populates="template", cascade="all, delete-orphan")
+    
+    __table_args__ = (
+        UniqueConstraint("industry_type", name="uq_template_industry"),
+    )
+
+
+class WorkflowTemplateVersion(Base):
+    """
+    Workflow template version model for template versioning system.
+    """
+    __tablename__ = "workflow_template_versions"
+    
+    id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+    template_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("workflow_templates.id"), nullable=False, index=True
+    )
+    version: Mapped[str] = mapped_column(String(20), nullable=False)  # e.g., "1.0.0", "1.1.0"
+    is_current: Mapped[bool] = mapped_column(Boolean, default=False)
+    is_deprecated: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    
+    # Version metadata
+    changelog: Mapped[Optional[str]] = mapped_column(Text)
+    breaking_changes: Mapped[bool] = mapped_column(Boolean, default=False)
+    migration_notes: Mapped[Optional[str]] = mapped_column(Text)
+    
+    # Template definition
+    template_definition: Mapped[dict] = mapped_column(JSONB, nullable=False)
+    
+    # Relationships
+    template = relationship("WorkflowTemplate", back_populates="versions")
+    
+    __table_args__ = (
+        UniqueConstraint("template_id", "version", name="uq_template_version"),
+    )
+
+
 class AuditLog(Base):
     """
     Audit log for compliance tracking.

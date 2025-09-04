@@ -20,6 +20,7 @@ class IndustryType(str, Enum):
     HEALTHCARE = "healthcare"
     MANUFACTURING = "manufacturing"
     RETAIL = "retail"
+    PRODUCT_RECOMMENDER = "product_recommender"
     RESTAURANT = "restaurant"
     EDUCATION = "education"
     LOGISTICS = "logistics"
@@ -695,6 +696,7 @@ class IndustryTemplateFactory:
             IndustryType.SALON_SPA: IndustryTemplateFactory.create_salon_spa_template,
             IndustryType.HEALTHCARE: IndustryTemplateFactory.create_healthcare_template,
             IndustryType.MANUFACTURING: IndustryTemplateFactory.create_manufacturing_template,
+            IndustryType.PRODUCT_RECOMMENDER: IndustryTemplateFactory.create_product_recommender_template,
         }
         
         if industry not in templates:
@@ -710,7 +712,7 @@ class IndustryTemplateFactory:
             IndustryType.SALON_SPA,
             IndustryType.HEALTHCARE,
             IndustryType.MANUFACTURING,
-            # Add more as they're implemented
+            IndustryType.PRODUCT_RECOMMENDER,
         ]
     
     @staticmethod
@@ -752,3 +754,227 @@ class IndustryTemplateFactory:
                 customized.cancellation_policy = custom_business_rules["cancellation_policy"]
         
         return customized
+    
+    @staticmethod
+    def create_product_recommender_template() -> IndustryTemplate:
+        """Create product recommender template for e-commerce/retail."""
+        return IndustryTemplate(
+            industry=IndustryType.PRODUCT_RECOMMENDER,
+            name="AI Product Recommender System",
+            description="Intelligent product discovery and recommendation workflow for e-commerce and retail SMEs",
+            
+            booking_form_fields=[
+                FormField(
+                    name="customer_name",
+                    label="Customer Name",
+                    field_type=FormFieldType.TEXT,
+                    required=True,
+                    placeholder="Enter customer name"
+                ),
+                FormField(
+                    name="customer_email",
+                    label="Email Address",
+                    field_type=FormFieldType.EMAIL,
+                    required=True,
+                    validation_rules={"format": "email"},
+                    placeholder="customer@example.com"
+                ),
+                FormField(
+                    name="customer_phone",
+                    label="Phone Number",
+                    field_type=FormFieldType.PHONE,
+                    required=False,
+                    phone_format="+234-XXX-XXX-XXXX",
+                    placeholder="+234-801-234-5678"
+                ),
+                FormField(
+                    name="product_category",
+                    label="Product Category of Interest",
+                    field_type=FormFieldType.SELECT,
+                    required=True,
+                    options=[
+                        "Electronics & Gadgets",
+                        "Fashion & Clothing",
+                        "Home & Living",
+                        "Beauty & Personal Care",
+                        "Sports & Fitness",
+                        "Books & Education",
+                        "Food & Beverages",
+                        "Health & Wellness",
+                        "Automotive",
+                        "Arts & Crafts"
+                    ]
+                ),
+                FormField(
+                    name="budget_range",
+                    label="Budget Range",
+                    field_type=FormFieldType.SELECT,
+                    required=True,
+                    options=[
+                        "Under ₦10,000",
+                        "₦10,000 - ₦25,000",
+                        "₦25,000 - ₦50,000",
+                        "₦50,000 - ₦100,000",
+                        "₦100,000 - ₦250,000",
+                        "₦250,000 - ₦500,000",
+                        "Above ₦500,000"
+                    ]
+                ),
+                FormField(
+                    name="purchase_urgency",
+                    label="When do you need this?",
+                    field_type=FormFieldType.SELECT,
+                    required=True,
+                    options=[
+                        "Immediately",
+                        "Within 1 week",
+                        "Within 1 month",
+                        "Within 3 months",
+                        "Just browsing"
+                    ]
+                ),
+                FormField(
+                    name="preferred_brands",
+                    label="Preferred Brands (if any)",
+                    field_type=FormFieldType.MULTISELECT,
+                    required=False,
+                    options=[
+                        "Samsung", "Apple", "Nike", "Adidas", "HP", "Dell",
+                        "Tecno", "Infinix", "Oraimo", "Xiaomi", "Huawei",
+                        "Local Brands", "No Preference"
+                    ]
+                ),
+                FormField(
+                    name="shopping_preferences",
+                    label="Shopping Preferences",
+                    field_type=FormFieldType.MULTISELECT,
+                    required=False,
+                    options=[
+                        "Latest Technology",
+                        "Best Value for Money",
+                        "Premium Quality",
+                        "Eco-Friendly",
+                        "Local Products",
+                        "Fast Delivery",
+                        "Warranty Coverage",
+                        "After-Sales Support"
+                    ]
+                ),
+                FormField(
+                    name="previous_purchases",
+                    label="Tell us about your recent purchases",
+                    field_type=FormFieldType.TEXTAREA,
+                    required=False,
+                    placeholder="Describe products you've bought recently to help us understand your preferences..."
+                ),
+                FormField(
+                    name="specific_requirements",
+                    label="Specific Requirements or Features",
+                    field_type=FormFieldType.TEXTAREA,
+                    required=False,
+                    placeholder="Any specific features, colors, sizes, or requirements you're looking for..."
+                ),
+                FormField(
+                    name="delivery_location",
+                    label="Delivery Location",
+                    field_type=FormFieldType.SELECT,
+                    required=True,
+                    options=[
+                        "Lagos, Nigeria",
+                        "Abuja, Nigeria", 
+                        "Kano, Nigeria",
+                        "Port Harcourt, Nigeria",
+                        "Ibadan, Nigeria",
+                        "Nairobi, Kenya",
+                        "Mombasa, Kenya",
+                        "Cape Town, South Africa",
+                        "Johannesburg, South Africa",
+                        "Accra, Ghana",
+                        "Other (specify in comments)"
+                    ]
+                )
+            ],
+            
+            confirmation_fields=[
+                FormField(
+                    name="recommendation_delivery",
+                    label="How would you like to receive recommendations?",
+                    field_type=FormFieldType.SELECT,
+                    required=True,
+                    options=["Email", "SMS", "WhatsApp", "Phone Call", "In-App Notification"]
+                ),
+                FormField(
+                    name="follow_up_preference",
+                    label="Follow-up Preference",
+                    field_type=FormFieldType.SELECT,
+                    required=True,
+                    options=["Daily Updates", "Weekly Summary", "Only Best Matches", "No Follow-up"]
+                ),
+                FormField(
+                    name="price_alerts",
+                    label="Enable Price Drop Alerts?",
+                    field_type=FormFieldType.CHECKBOX,
+                    required=False
+                ),
+                FormField(
+                    name="newsletter_subscription",
+                    label="Subscribe to Product Newsletter?",
+                    field_type=FormFieldType.CHECKBOX,
+                    required=False
+                )
+            ],
+            
+            workflow_nodes=[
+                {"name": "start", "type": "start"},
+                {"name": "customer_profiling", "type": "agent", "config": {"task": "analyze_customer_preferences"}},
+                {"name": "product_discovery", "type": "agent", "config": {"task": "discover_relevant_products"}},
+                {"name": "ai_recommendation", "type": "agent", "config": {"task": "generate_ai_recommendations"}},
+                {"name": "price_comparison", "type": "agent", "config": {"task": "compare_prices_across_vendors"}},
+                {"name": "availability_check", "type": "agent", "config": {"task": "check_product_availability"}},
+                {"name": "recommendation_ranking", "type": "agent", "config": {"task": "rank_recommendations_by_relevance"}},
+                {"name": "personalization", "type": "agent", "config": {"task": "personalize_recommendations"}},
+                {"name": "delivery_estimation", "type": "agent", "config": {"task": "estimate_delivery_times"}},
+                {"name": "recommendation_packaging", "type": "agent", "config": {"task": "package_final_recommendations"}},
+                {"name": "customer_notification", "type": "agent", "config": {"task": "send_recommendations_to_customer"}},
+                {"name": "feedback_collection", "type": "agent", "config": {"task": "collect_customer_feedback"}},
+                {"name": "end", "type": "end"}
+            ],
+            
+            workflow_edges=[
+                {"from": "start", "to": "customer_profiling"},
+                {"from": "customer_profiling", "to": "product_discovery"},
+                {"from": "product_discovery", "to": "ai_recommendation"},
+                {"from": "ai_recommendation", "to": "price_comparison"},
+                {"from": "price_comparison", "to": "availability_check"},
+                {"from": "availability_check", "to": "recommendation_ranking"},
+                {"from": "recommendation_ranking", "to": "personalization"},
+                {"from": "personalization", "to": "delivery_estimation"},
+                {"from": "delivery_estimation", "to": "recommendation_packaging"},
+                {"from": "recommendation_packaging", "to": "customer_notification"},
+                {"from": "customer_notification", "to": "feedback_collection"},
+                {"from": "feedback_collection", "to": "end"}
+            ],
+            
+            business_hours={
+                "monday": {"start": "08:00", "end": "20:00"},
+                "tuesday": {"start": "08:00", "end": "20:00"},
+                "wednesday": {"start": "08:00", "end": "20:00"},
+                "thursday": {"start": "08:00", "end": "20:00"},
+                "friday": {"start": "08:00", "end": "20:00"},
+                "saturday": {"start": "09:00", "end": "18:00"},
+                "sunday": {"start": "10:00", "end": "16:00"}
+            },
+            
+            advance_booking_days=0,  # Immediate processing
+            cancellation_policy="Recommendations can be updated anytime based on feedback",
+            
+            required_integrations=["ai_engine", "product_catalog", "email", "sms"],
+            optional_integrations=[
+                "whatsapp", "payment_gateway", "inventory_management", 
+                "price_monitoring", "analytics", "crm", "social_media"
+            ],
+            
+            supported_regions=["NG", "KE", "ZA", "GH", "UG", "TZ"],
+            supported_currencies=["NGN", "KES", "ZAR", "GHS", "UGX", "TZS"],
+            supported_languages=["en", "ha", "yo", "ig", "sw", "zu", "af"]
+        )

@@ -15,6 +15,7 @@ from ..auth.jwt_middleware import get_current_user, UserInfo
 from ..workflows.manager import WorkflowManager
 from ..workflows.state import WorkflowState
 from ..workflows.templates import IndustryType, FormField
+from ..workflows.template_versioning import TemplateVersionManager, TemplateVersionCreate, TemplateVersionInfo
 from ..core.database import get_db_session
 
 router = APIRouter(prefix="/langgraph", tags=["langgraph-workflows"])
@@ -812,4 +813,294 @@ async def create_manufacturing_workflow(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create manufacturing workflow: {str(e)}"
+        )
+
+
+@router.post("/templates/product-recommender", response_model=WorkflowResponse)
+async def create_product_recommender_workflow(
+    name: str = "AI Product Recommender System",
+    user_info: UserInfo = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session)
+):
+    """
+    Create a product recommender industry workflow for e-commerce/retail SMEs.
+    
+    Args:
+        name: Workflow name
+        user_info: Current user information
+        db_session: Database session
+        
+    Returns:
+        Created workflow data
+    """
+    try:
+        manager = WorkflowManager(user_info.tenant_id, db_session)
+        
+        workflow = await manager.create_industry_workflow(
+            industry=IndustryType.PRODUCT_RECOMMENDER,
+            name=name
+        )
+        
+        return WorkflowResponse(
+            id=str(workflow.id),
+            name=workflow.name,
+            description=workflow.description,
+            template_type=workflow.template_type,
+            is_active=workflow.is_active,
+            created_at=workflow.created_at.isoformat(),
+            updated_at=workflow.updated_at.isoformat()
+        )
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create product recommender workflow: {str(e)}"
+        )
+
+
+# Template versioning endpoints
+@router.get("/templates/{industry}/versions", response_model=List[TemplateVersionInfo])
+async def get_template_versions(
+    industry: str,
+    user_info: UserInfo = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session)
+):
+    """
+    Get version history for a template.
+    
+    Args:
+        industry: Industry type
+        user_info: Current user information
+        db_session: Database session
+        
+    Returns:
+        List of template versions
+    """
+    try:
+        # Validate industry type
+        try:
+            industry_type = IndustryType(industry)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid industry type: {industry}"
+            )
+        
+        version_manager = TemplateVersionManager(db_session)
+        versions = await version_manager.get_version_history(industry_type)
+        
+        return versions
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get template versions: {str(e)}"
+        )
+
+
+@router.get("/templates/{industry}/versions/current", response_model=Optional[TemplateVersionInfo])
+async def get_current_template_version(
+    industry: str,
+    user_info: UserInfo = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session)
+):
+    """
+    Get current version of a template.
+    
+    Args:
+        industry: Industry type
+        user_info: Current user information
+        db_session: Database session
+        
+    Returns:
+        Current template version or None
+    """
+    try:
+        # Validate industry type
+        try:
+            industry_type = IndustryType(industry)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid industry type: {industry}"
+            )
+        
+        version_manager = TemplateVersionManager(db_session)
+        current_version = await version_manager.get_current_version(industry_type)
+        
+        if not current_version:
+            return None
+            
+        return TemplateVersionInfo(
+            id=current_version.id,
+            template_id=current_version.template_id,
+            version=current_version.version,
+            is_current=current_version.is_current,
+            is_deprecated=current_version.is_deprecated,
+            created_at=current_version.created_at,
+            changelog=current_version.changelog,
+            breaking_changes=current_version.breaking_changes,
+            migration_notes=current_version.migration_notes
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get current template version: {str(e)}"
+        )
+
+
+@router.post("/templates/{industry}/versions", response_model=TemplateVersionInfo)
+async def create_template_version(
+    industry: str,
+    version_data: TemplateVersionCreate,
+    user_info: UserInfo = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session)
+):
+    """
+    Create a new version of a template.
+    
+    Args:
+        industry: Industry type
+        version_data: Version creation data
+        user_info: Current user information
+        db_session: Database session
+        
+    Returns:
+        Created template version
+    """
+    try:
+        # Validate industry type
+        try:
+            industry_type = IndustryType(industry)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid industry type: {industry}"
+            )
+        
+        version_manager = TemplateVersionManager(db_session)
+        new_version = await version_manager.create_new_version(industry_type, version_data)
+        
+        return TemplateVersionInfo(
+            id=new_version.id,
+            template_id=new_version.template_id,
+            version=new_version.version,
+            is_current=new_version.is_current,
+            is_deprecated=new_version.is_deprecated,
+            created_at=new_version.created_at,
+            changelog=new_version.changelog,
+            breaking_changes=new_version.breaking_changes,
+            migration_notes=new_version.migration_notes
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create template version: {str(e)}"
+        )
+
+
+@router.put("/templates/{industry}/versions/{version}/deprecate")
+async def deprecate_template_version(
+    industry: str,
+    version: str,
+    user_info: UserInfo = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session)
+):
+    """
+    Mark a template version as deprecated.
+    
+    Args:
+        industry: Industry type
+        version: Version string to deprecate
+        user_info: Current user information
+        db_session: Database session
+        
+    Returns:
+        Success message
+    """
+    try:
+        # Validate industry type
+        try:
+            industry_type = IndustryType(industry)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid industry type: {industry}"
+            )
+        
+        version_manager = TemplateVersionManager(db_session)
+        success = await version_manager.deprecate_version(industry_type, version)
+        
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Version {version} not found for industry {industry}"
+            )
+        
+        return {"message": f"Version {version} deprecated successfully"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to deprecate template version: {str(e)}"
+        )
+
+
+@router.get("/templates/{industry}/definition")
+async def get_template_definition(
+    industry: str,
+    version: Optional[str] = None,
+    user_info: UserInfo = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session)
+):
+    """
+    Get template definition for specific version or current.
+    
+    Args:
+        industry: Industry type
+        version: Specific version, or None for current
+        user_info: Current user information
+        db_session: Database session
+        
+    Returns:
+        Template definition
+    """
+    try:
+        # Validate industry type
+        try:
+            industry_type = IndustryType(industry)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid industry type: {industry}"
+            )
+        
+        version_manager = TemplateVersionManager(db_session)
+        definition = await version_manager.get_template_definition(industry_type, version)
+        
+        if not definition:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Template definition not found for industry {industry}" + 
+                       (f" version {version}" if version else "")
+            )
+        
+        return definition
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get template definition: {str(e)}"
         )

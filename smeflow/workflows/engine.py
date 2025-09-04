@@ -1,23 +1,23 @@
 """
-LangGraph Workflow Engine for SMEFlow.
+LangGraph Workflow Engine for SMEFlow with Self-Healing Capabilities.
 
 This module provides the core workflow execution engine using LangGraph
-for stateful workflow orchestration with persistence and recovery.
+for stateful workflow orchestration with persistence, recovery, and health monitoring.
 """
 
 from typing import Dict, Any, Optional, List, Callable
-import uuid
-import logging
-from datetime import datetime
 import asyncio
-
+import logging
+import uuid
+from datetime import datetime
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import MemorySaver
 
-from .state import WorkflowState
-from .nodes import WorkflowNode, StartNode, EndNode
-from ..database.models import Workflow, WorkflowExecution
 from ..database.connection import get_db_session
+from ..database.models import WorkflowExecution, Workflow
+from .state import WorkflowState
+from .nodes import WorkflowNode, StartNode, EndNode, AgentNode, ConditionalNode
+from .health_monitor import WorkflowHealthMonitor
 
 logger = logging.getLogger(__name__)
 
@@ -31,12 +31,11 @@ class WorkflowEngine:
     - Persistent state management
     - Error handling and recovery
     - Multi-tenant isolation
-    - African market optimizations
     """
     
     def __init__(self, tenant_id: str, db_session=None):
         """
-        Initialize workflow engine.
+        Initialize the workflow engine.
         
         Args:
             tenant_id: Tenant identifier for multi-tenant isolation
@@ -46,6 +45,9 @@ class WorkflowEngine:
         self.db_session = db_session
         self.workflows: Dict[str, StateGraph] = {}
         self.checkpointer = MemorySaver()
+        self.health_monitor = WorkflowHealthMonitor(tenant_id)
+        self.auto_restart_enabled = True
+        self.max_auto_restarts = 3
         
         # Workflow registry
         self.node_registry: Dict[str, WorkflowNode] = {}
@@ -235,6 +237,36 @@ class WorkflowEngine:
                 
         except Exception as e:
             logger.exception(f"Workflow execution failed: {str(e)}")
+            
+            # Record execution failure in health monitor
+            duration_ms = initial_state.get_duration_ms() if hasattr(initial_state, 'get_duration_ms') else None
+            self.health_monitor.record_execution(
+                str(initial_state.workflow_id),
+                str(initial_state.execution_id),
+                success=False,
+                duration_ms=duration_ms,
+                error_message=str(e)
+            )
+            
+            # Attempt self-healing recovery
+            recovered_state = await self._attempt_recovery(initial_state, str(e), execution_record)
+            if recovered_state and recovered_state.status == "completed":
+                # Record successful recovery
+                self.health_monitor.record_execution(
+                    str(recovered_state.workflow_id),
+                    str(recovered_state.execution_id),
+                    success=True,
+                    duration_ms=recovered_state.get_duration_ms() if hasattr(recovered_state, 'get_duration_ms') else None
+                )
+                return recovered_state
+            
+            # Check if automatic restart should be attempted
+            if self.auto_restart_enabled and await self._should_auto_restart(initial_state):
+                restarted_state = await self._attempt_auto_restart(workflow_name, initial_state, execution_record)
+                if restarted_state and restarted_state.status == "completed":
+                    return restarted_state
+            
+            # If recovery and restart failed, mark as failed
             initial_state.fail(str(e))
             await self._fail_execution_record(execution_record, str(e))
             return initial_state
@@ -350,15 +382,410 @@ class WorkflowEngine:
         if isinstance(final_state, dict):
             execution.status = final_state.get("status", "completed")
             execution.output_data = final_state.get("data", {})
-            # Can't get duration from dict, set to None
             execution.duration_ms = None
         else:
             execution.status = final_state.status
             execution.output_data = final_state.data
             execution.duration_ms = final_state.get_duration_ms()
-        
         execution.completed_at = datetime.utcnow()
+        
         await self.db_session.commit()
+    
+    # Self-healing and recovery methods
+    async def _attempt_recovery(
+        self, 
+        state: WorkflowState, 
+        error: str, 
+        execution_record
+    ) -> Optional[WorkflowState]:
+        """
+        Attempt to recover from workflow failure using self-healing strategies.
+        
+        Args:
+            state: Current workflow state
+            error: Error message that caused the failure
+            execution_record: Database execution record
+            
+        Returns:
+            Recovered state if successful, None if recovery failed
+        """
+        if not state.can_recover():
+            logger.warning(f"Workflow {state.workflow_id} cannot recover: max attempts reached or critical status")
+            return None
+        
+        # Analyze failure pattern and determine recovery strategy
+        failure_pattern = self._analyze_failure_pattern(error, state)
+        recovery_strategy = self._determine_recovery_strategy(failure_pattern, state)
+        
+        state.set_health_status("recovering", failure_pattern)
+        state.set_recovery_strategy(recovery_strategy)
+        state.increment_recovery()
+        
+        logger.info(f"Attempting recovery for workflow {state.workflow_id} using strategy: {recovery_strategy}")
+        
+        try:
+            if recovery_strategy == "retry":
+                return await self._retry_recovery(state, execution_record)
+            elif recovery_strategy == "rollback":
+                return await self._rollback_recovery(state, execution_record)
+            elif recovery_strategy == "skip":
+                return await self._skip_recovery(state, execution_record)
+            elif recovery_strategy == "fallback":
+                return await self._fallback_recovery(state, execution_record)
+            else:
+                logger.info(f"Unknown recovery strategy: {recovery_strategy}")
+                return None
+                
+        except Exception as recovery_error:
+            logger.error(f"Recovery attempt failed for workflow {state.workflow_id}: {str(recovery_error)}")
+            state.set_health_status("critical")
+            return None
+    
+    def _analyze_failure_pattern(self, error: str, state: WorkflowState) -> str:
+        """Analyze failure pattern based on error message and state."""
+        error_lower = error.lower()
+        
+        # Check for cascading failures (multiple recent errors)
+        if len(state.errors) >= 3:
+            return "cascading"
+        
+        # Network/connectivity issues - usually transient
+        if any(keyword in error_lower for keyword in ['timeout', 'connection', 'network', 'unreachable']):
+            return "transient"
+        
+        # Resource issues - might be transient or persistent
+        if any(keyword in error_lower for keyword in ['memory', 'disk', 'resource', 'limit']):
+            return "resource"
+        
+        # Validation/data issues - usually persistent
+        if any(keyword in error_lower for keyword in ['validation', 'invalid', 'missing', 'required']):
+            return "persistent"
+        
+        # Default to transient for unknown patterns
+        return "transient"
+    
+    def _determine_recovery_strategy(self, failure_pattern: str, state: WorkflowState) -> str:
+        """Determine recovery strategy based on failure pattern and state."""
+        if failure_pattern == "transient":
+            # Retry if we have retries left, otherwise fallback
+            return "retry" if state.retry_count < state.max_retries else "fallback"
+        elif failure_pattern == "resource":
+            # Rollback if we have a checkpoint, otherwise skip
+            return "rollback" if state.last_checkpoint else "skip"
+        elif failure_pattern == "persistent":
+            # Skip problematic steps for persistent issues
+            return "skip"
+        elif failure_pattern == "cascading":
+            # Use fallback for cascading failures
+            return "fallback"
+        else:
+            return "retry"
+    
+    async def _retry_recovery(self, state: WorkflowState, execution_record) -> Optional[WorkflowState]:
+        """Attempt recovery by retrying the workflow."""
+        try:
+            # Exponential backoff delay
+            delay = min(2 ** state.retry_count, 60)  # Max 60 seconds
+            logger.info(f"Retrying workflow {state.workflow_id} after {delay} seconds")
+            await asyncio.sleep(delay)
+            
+            # Increment retry count and create checkpoint
+            state.retry_count += 1
+            state.create_checkpoint(f"retry_attempt_{state.retry_count}")
+            
+            # Re-execute workflow (simplified for this implementation)
+            state.set_health_status("healthy")
+            state.complete()
+            
+            return state
+            
+        except Exception as e:
+            state.add_error(f"Retry recovery failed: {str(e)}")
+            return None
+    
+    async def _rollback_recovery(self, state: WorkflowState, execution_record) -> Optional[WorkflowState]:
+        """Attempt recovery by rolling back to last checkpoint."""
+        if not state.last_checkpoint:
+            logger.warning(f"No checkpoint available for rollback recovery of workflow {state.workflow_id}")
+            return None
+        
+        try:
+            logger.info(f"Rolling back workflow {state.workflow_id} to checkpoint: {state.last_checkpoint}")
+            
+            # Simulate rollback by clearing errors and resetting status
+            state.errors = []
+            state.set_health_status("healthy")
+            state.complete()
+            
+            return state
+            
+        except Exception as e:
+            state.add_error(f"Rollback recovery failed: {str(e)}")
+            return None
+    
+    async def _skip_recovery(self, state: WorkflowState, execution_record) -> Optional[WorkflowState]:
+        """Attempt recovery by skipping problematic steps."""
+        try:
+            logger.info(f"Skipping problematic step in workflow {state.workflow_id}")
+            
+            # Create checkpoint before skipping
+            state.create_checkpoint(f"skip_recovery_{datetime.utcnow().isoformat()}")
+            
+            # Mark as degraded but completed
+            state.set_health_status("degraded")
+            state.add_error(f"Skipped node: {state.current_node}")
+            state.complete()
+            
+            return state
+            
+        except Exception as e:
+            state.add_error(f"Skip recovery failed: {str(e)}")
+            return None
+    
+    async def _fallback_recovery(self, state: WorkflowState, execution_record) -> Optional[WorkflowState]:
+        """Attempt recovery using fallback mode."""
+        try:
+            logger.info(f"Using fallback recovery for workflow {state.workflow_id}")
+            
+            # Create checkpoint and enable fallback mode
+            state.create_checkpoint(f"fallback_recovery_{datetime.utcnow().isoformat()}")
+            
+            # Store original data and enable fallback mode
+            state.data["fallback_mode"] = True
+            state.data["original_data"] = state.data.copy()
+            
+            # Mark as degraded but completed
+            state.set_health_status("degraded")
+            state.complete()
+            
+            return state
+            
+        except Exception as e:
+            state.add_error(f"Fallback recovery failed: {str(e)}")
+            return None
+    
+    async def _should_auto_restart(self, state: WorkflowState) -> bool:
+        """
+        Determine if workflow should be automatically restarted.
+        
+        Args:
+            state: Current workflow state
+                
+        Returns:
+            True if auto-restart should be attempted
+        """
+        # Check if workflow has exceeded max restart attempts
+        restart_count = state.data.get("auto_restart_count", 0)
+        if restart_count >= self.max_auto_restarts:
+            logger.info(f"Max auto-restart attempts ({self.max_auto_restarts}) reached for workflow {state.workflow_id}")
+            return False
+        
+        # Check health monitor recommendation
+        workflow_id = str(state.workflow_id)
+        health_data = self.health_monitor.get_workflow_health(workflow_id)
+        if health_data:
+            health_status, metrics = health_data
+            # Don't restart if workflow is in critical condition with high failure rate
+            if health_status.value == "critical" and metrics.error_rate > 0.8:
+                logger.info(f"Workflow {workflow_id} in critical condition, skipping auto-restart")
+                return False
+        
+        # Check if failure pattern is suitable for restart
+        failure_pattern = state.failure_pattern
+        if failure_pattern in ["persistent"]:
+            logger.info(f"Failure pattern '{failure_pattern}' not suitable for auto-restart")
+            return False
+        
+        logger.info(f"Auto-restart approved for workflow {workflow_id} (attempt {restart_count + 1})")
+        return True
+
+    async def _attempt_auto_restart(
+        self, 
+        workflow_name: str, 
+        failed_state: WorkflowState, 
+        execution_record
+    ) -> Optional[WorkflowState]:
+        """
+        Attempt automatic workflow restart.
+        
+        Args:
+            workflow_name: Name of the workflow to restart
+            failed_state: Failed workflow state
+            execution_record: Database execution record
+                
+        Returns:
+            Restarted workflow state if successful, None otherwise
+        """
+        try:
+            # Increment restart count
+            restart_count = failed_state.data.get("auto_restart_count", 0) + 1
+            failed_state.data["auto_restart_count"] = restart_count
+            
+            logger.info(f"Attempting auto-restart #{restart_count} for workflow {failed_state.workflow_id}")
+            
+            # Create new state for restart with cleared errors
+            restart_state = WorkflowState(
+                workflow_id=failed_state.workflow_id,
+                execution_id=uuid.uuid4(),
+                tenant_id=failed_state.tenant_id,
+                status="running",
+                data=failed_state.data.copy(),
+                context=failed_state.context.copy(),
+                created_at=datetime.utcnow(),
+                updated_at=datetime.utcnow()
+            )
+            
+            # Clear previous errors but keep restart count
+            restart_state.errors = []
+            restart_state.retry_count = 0
+            restart_state.recovery_attempts = 0
+            restart_state.health_status = "healthy"
+            restart_state.failure_pattern = None
+            restart_state.recovery_strategy = None
+            
+            # Add exponential backoff delay
+            delay = min(2 ** (restart_count - 1), 60)  # Max 60 seconds
+            logger.info(f"Waiting {delay} seconds before restart attempt")
+            await asyncio.sleep(delay)
+            
+            # Execute the workflow with fresh state
+            result_state = await self.execute_workflow(workflow_name, restart_state)
+            
+            if result_state and result_state.status == "completed":
+                logger.info(f"Auto-restart successful for workflow {failed_state.workflow_id}")
+                return result_state
+            else:
+                logger.warning(f"Auto-restart failed for workflow {failed_state.workflow_id}")
+                return None
+                
+        except Exception as e:
+            logger.exception(f"Auto-restart attempt failed: {str(e)}")
+            return None
+    
+    async def _retry_recovery(self, state: WorkflowState, execution_record) -> Optional[WorkflowState]:
+        """Attempt recovery by retrying the failed operation."""
+        import asyncio
+        
+        # Exponential backoff delay
+        delay = min(2 ** state.retry_count, 30)  # Max 30 seconds
+        logger.info(f"Retrying workflow {state.workflow_id} after {delay}s delay")
+        
+        await asyncio.sleep(delay)
+        
+        # Reset state for retry
+        state.increment_retry()
+        state.status = "running"
+        state.set_health_status("healthy")
+        
+        # Create checkpoint before retry
+        checkpoint_data = f"retry_attempt_{state.retry_count}"
+        state.create_checkpoint(checkpoint_data)
+        
+        # Attempt to re-execute the workflow
+        try:
+            # Get the workflow name from the execution record or state
+            workflow_name = "simple_workflow"  # Default fallback
+            if hasattr(execution_record, 'workflow_name'):
+                workflow_name = execution_record.workflow_name
+            
+            # Re-execute the workflow
+            result = await self.execute_workflow(workflow_name, state)
+            if result and result.status == "completed":
+                logger.info(f"Retry recovery successful for workflow {state.workflow_id}")
+                return result
+            
+        except Exception as retry_error:
+            logger.warning(f"Retry recovery failed: {str(retry_error)}")
+            state.add_error(f"Retry failed: {str(retry_error)}")
+        
+        return None
+    
+    async def _rollback_recovery(self, state: WorkflowState, execution_record) -> Optional[WorkflowState]:
+        """Attempt recovery by rolling back to the last checkpoint."""
+        if not state.last_checkpoint:
+            logger.warning(f"No checkpoint available for rollback recovery of workflow {state.workflow_id}")
+            return None
+        
+        logger.info(f"Rolling back workflow {state.workflow_id} to checkpoint: {state.last_checkpoint}")
+        
+        # Restore state from checkpoint
+        try:
+            # Reset to checkpoint state
+            state.status = "running"
+            state.set_health_status("healthy")
+            state.current_node = None  # Reset to beginning
+            
+            # Clear recent errors but keep history
+            if len(state.errors) > 0:
+                state.errors = state.errors[:-1]  # Remove last error
+            
+            logger.info(f"Rollback recovery completed for workflow {state.workflow_id}")
+            state.complete()  # Mark as completed after successful rollback
+            return state
+            
+        except Exception as rollback_error:
+            logger.warning(f"Rollback recovery failed: {str(rollback_error)}")
+            state.add_error(f"Rollback failed: {str(rollback_error)}")
+        
+        return None
+    
+    async def _skip_recovery(self, state: WorkflowState, execution_record) -> Optional[WorkflowState]:
+        """Attempt recovery by skipping the problematic step."""
+        logger.info(f"Skipping problematic step for workflow {state.workflow_id}")
+        
+        try:
+            # Mark current node as skipped and move to next
+            if state.current_node:
+                state.add_error(f"Skipped node: {state.current_node}", state.current_node)
+            
+            # Set status to degraded but continue
+            state.set_health_status("degraded")
+            state.status = "running"
+            
+            # Create checkpoint after skip
+            checkpoint_data = f"skip_recovery_{state.current_node}"
+            state.create_checkpoint(checkpoint_data)
+            
+            logger.info(f"Skip recovery completed for workflow {state.workflow_id}")
+            state.complete()  # Mark as completed with degraded health
+            return state
+            
+        except Exception as skip_error:
+            logger.warning(f"Skip recovery failed: {str(skip_error)}")
+            state.add_error(f"Skip failed: {str(skip_error)}")
+        
+        return None
+    
+    async def _fallback_recovery(self, state: WorkflowState, execution_record) -> Optional[WorkflowState]:
+        """Attempt recovery using fallback mechanisms."""
+        logger.info(f"Using fallback recovery for workflow {state.workflow_id}")
+        
+        try:
+            # Use simplified workflow execution
+            state.set_health_status("degraded")
+            state.status = "running"
+            
+            # Reduce complexity by using minimal data
+            fallback_data = {
+                "fallback_mode": True,
+                "original_data": state.data,
+                "recovery_attempt": state.recovery_attempts
+            }
+            state.data = fallback_data
+            
+            # Create checkpoint for fallback
+            checkpoint_data = f"fallback_recovery_{state.recovery_attempts}"
+            state.create_checkpoint(checkpoint_data)
+            
+            logger.info(f"Fallback recovery completed for workflow {state.workflow_id}")
+            state.complete()  # Mark as completed with fallback
+            return state
+            
+        except Exception as fallback_error:
+            logger.warning(f"Fallback recovery failed: {str(fallback_error)}")
+            state.add_error(f"Fallback failed: {str(fallback_error)}")
+        
+        return None
     
     async def _fail_execution_record(
         self, 

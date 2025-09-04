@@ -27,10 +27,16 @@ class WorkflowState(BaseModel):
     data: Dict[str, Any] = Field(default_factory=dict)
     context: Dict[str, Any] = Field(default_factory=dict)
     
-    # Error handling
+    # Error handling and self-healing
     errors: List[Dict[str, Any]] = Field(default_factory=list)
     retry_count: int = 0
     max_retries: int = 3
+    recovery_attempts: int = 0
+    max_recovery_attempts: int = 5
+    last_checkpoint: Optional[str] = None
+    health_status: str = "healthy"  # healthy, degraded, critical, recovering
+    failure_pattern: Optional[str] = None  # transient, persistent, cascading
+    recovery_strategy: Optional[str] = None  # retry, rollback, skip, fallback
     
     # Timestamps
     started_at: datetime = Field(default_factory=datetime.utcnow)
@@ -116,3 +122,41 @@ class WorkflowState(BaseModel):
             delta = self.completed_at - self.started_at
             return int(delta.total_seconds() * 1000)
         return None
+    
+    # Self-healing methods
+    def can_recover(self) -> bool:
+        """Check if the workflow can attempt recovery."""
+        return (self.recovery_attempts < self.max_recovery_attempts and 
+                self.health_status != "critical")
+    
+    def set_health_status(self, status: str, pattern: Optional[str] = None) -> None:
+        """Update workflow health status and failure pattern."""
+        self.health_status = status
+        if pattern:
+            self.failure_pattern = pattern
+        self.updated_at = datetime.utcnow()
+    
+    def set_recovery_strategy(self, strategy: str) -> None:
+        """Set the recovery strategy for the workflow."""
+        self.recovery_strategy = strategy
+        self.updated_at = datetime.utcnow()
+    
+    def increment_recovery(self) -> None:
+        """Increment the recovery attempt counter."""
+        self.recovery_attempts += 1
+        self.health_status = "recovering"
+        self.updated_at = datetime.utcnow()
+    
+    def create_checkpoint(self, checkpoint_data: str) -> None:
+        """Create a checkpoint for state recovery."""
+        self.last_checkpoint = checkpoint_data
+        self.updated_at = datetime.utcnow()
+    
+    def is_healthy(self) -> bool:
+        """Check if the workflow is in a healthy state."""
+        return self.health_status == "healthy"
+    
+    def needs_intervention(self) -> bool:
+        """Check if the workflow needs manual intervention."""
+        return (self.health_status == "critical" or 
+                self.recovery_attempts >= self.max_recovery_attempts)

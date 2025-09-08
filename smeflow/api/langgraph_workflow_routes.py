@@ -15,6 +15,7 @@ from ..auth.jwt_middleware import get_current_user, UserInfo
 from ..workflows.manager import WorkflowManager
 from ..workflows.state import WorkflowState
 from ..workflows.templates import IndustryType, FormField
+from ..workflows.templates.erp_integration import create_erp_integration_template
 from ..workflows.template_versioning import TemplateVersionManager, TemplateVersionCreate, TemplateVersionInfo
 from ..core.database import get_db_session
 
@@ -1212,4 +1213,67 @@ async def get_template_definition(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get template definition: {str(e)}"
+        )
+
+
+@router.post("/workflows/erp-integration", response_model=WorkflowResponse)
+async def create_erp_integration_workflow(
+    user_info: UserInfo = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session)
+):
+    """
+    Create ERP integration workflow from template.
+    
+    Args:
+        user_info: Current user information
+        db_session: Database session
+        
+    Returns:
+        Created ERP integration workflow
+    """
+    try:
+        manager = WorkflowManager(user_info.tenant_id, db_session)
+        
+        # Get ERP integration template
+        template = create_erp_integration_template()
+        
+        # Create workflow from template
+        workflow = await manager.create_workflow(
+            name=template.name,
+            description=template.description,
+            template_type="erp_integration",
+            definition={
+                "industry": template.industry,
+                "booking_form_fields": [field.dict() for field in template.booking_form_fields],
+                "confirmation_fields": [field.dict() for field in template.confirmation_fields],
+                "workflow_nodes": template.workflow_nodes,
+                "workflow_edges": template.workflow_edges,
+                "business_hours": template.business_hours,
+                "notification_settings": template.notification_settings,
+                "required_integrations": template.required_integrations,
+                "optional_integrations": template.optional_integrations,
+                "supported_regions": template.supported_regions,
+                "supported_currencies": template.supported_currencies,
+                "supported_languages": template.supported_languages,
+                "cancellation_policy": template.cancellation_policy,
+                "advance_booking_days": template.advance_booking_days
+            }
+        )
+        
+        return WorkflowResponse(
+            id=str(workflow.id),
+            name=workflow.name,
+            description=workflow.description,
+            template_type=workflow.template_type,
+            is_active=workflow.is_active,
+            tenant_id=workflow.tenant_id,
+            definition=workflow.definition,
+            created_at=workflow.created_at.isoformat(),
+            updated_at=workflow.updated_at.isoformat()
+        )
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create ERP integration workflow: {str(e)}"
         )

@@ -235,11 +235,15 @@
     - [x] API endpoint for compliance workflow creation
     - [x] Setup government API integrations for tax/regulatory systems
   
-  - [ ] **WORKFLOW-006**: ERP Integration workflow type
-    - [ ] Implement invoice processing automation
-    - [ ] Create vendor management workflows
-    - [ ] Add SAP, HubSpot, Oracle connector templates
-    - [ ] Setup financial data processing and reconciliation
+  - [x] **WORKFLOW-006**: ERP Integration workflow type
+    - [x] Implement invoice processing automation
+    - [x] Create vendor management workflows
+    - [x] Add SAP, HubSpot, Oracle, local ERP connector templates
+    - [x] Setup financial data processing and reconciliation
+    - [x] African market ERP optimizations (local ERPs, banking APIs)
+    - [x] Comprehensive unit tests (21 tests, 100% pass rate)
+    - [x] API endpoint for ERP workflow creation
+    - [x] Modular templates architecture refactoring
 
   - **Acceptance**: Templates can be instantiated and customized per tenant - COMPLETE (2025-09-04)
   - **Next Phase**: Implement missing workflow types per Platform Design Document

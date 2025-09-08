@@ -26,6 +26,8 @@ class IndustryType(str, Enum):
     LOGISTICS = "logistics"
     FINTECH = "fintech"
     AGRICULTURE = "agriculture"
+    MARKETING_CAMPAIGNS = "marketing_campaigns"
+    COMPLIANCE_WORKFLOWS = "compliance_workflows"
 
 
 class FormFieldType(str, Enum):
@@ -689,6 +691,241 @@ class IndustryTemplateFactory:
         )
     
     @staticmethod
+    def create_marketing_campaigns_template() -> IndustryTemplate:
+        """Create marketing campaigns industry template."""
+        return IndustryTemplate(
+            industry=IndustryType.MARKETING_CAMPAIGNS,
+            name="Marketing Campaigns Management",
+            description="Comprehensive marketing campaign workflow with hyperlocal trend analysis and performance optimization",
+            
+            booking_form_fields=[
+                FormField(
+                    name="campaign_name",
+                    label="Campaign Name",
+                    field_type=FormFieldType.TEXT,
+                    required=True,
+                    placeholder="Enter campaign name"
+                ),
+                FormField(
+                    name="client_name",
+                    label="Client/Company Name",
+                    field_type=FormFieldType.TEXT,
+                    required=True,
+                    placeholder="Your company name"
+                ),
+                FormField(
+                    name="client_email",
+                    label="Primary Contact Email",
+                    field_type=FormFieldType.EMAIL,
+                    required=True,
+                    validation_rules={"format": "email"}
+                ),
+                FormField(
+                    name="client_phone",
+                    label="Contact Phone",
+                    field_type=FormFieldType.PHONE,
+                    required=True,
+                    phone_format="+234-XXX-XXX-XXXX",
+                    placeholder="+234-801-234-5678"
+                ),
+                FormField(
+                    name="campaign_type",
+                    label="Campaign Type",
+                    field_type=FormFieldType.SELECT,
+                    required=True,
+                    options=[
+                        "Brand Awareness",
+                        "Lead Generation",
+                        "Product Launch",
+                        "Social Media Campaign",
+                        "Email Marketing",
+                        "Influencer Marketing",
+                        "Content Marketing",
+                        "Performance Marketing"
+                    ]
+                ),
+                FormField(
+                    name="target_regions",
+                    label="Target Regions",
+                    field_type=FormFieldType.MULTISELECT,
+                    required=True,
+                    options=[
+                        "Lagos, Nigeria",
+                        "Abuja, Nigeria",
+                        "Kano, Nigeria",
+                        "Nairobi, Kenya",
+                        "Mombasa, Kenya",
+                        "Cape Town, South Africa",
+                        "Johannesburg, South Africa",
+                        "Accra, Ghana",
+                        "Kampala, Uganda",
+                        "Dar es Salaam, Tanzania"
+                    ]
+                ),
+                FormField(
+                    name="target_audience",
+                    label="Target Audience",
+                    field_type=FormFieldType.TEXTAREA,
+                    required=True,
+                    placeholder="Describe your target audience demographics, interests, and behaviors"
+                ),
+                FormField(
+                    name="campaign_budget",
+                    label="Campaign Budget",
+                    field_type=FormFieldType.SELECT,
+                    required=True,
+                    options=[
+                        "₦100,000 - ₦500,000",
+                        "₦500,000 - ₦1,000,000",
+                        "₦1,000,000 - ₦2,500,000",
+                        "₦2,500,000 - ₦5,000,000",
+                        "₦5,000,000+"
+                    ]
+                ),
+                FormField(
+                    name="campaign_duration",
+                    label="Campaign Duration",
+                    field_type=FormFieldType.SELECT,
+                    required=True,
+                    options=[
+                        "1 week",
+                        "2 weeks", 
+                        "1 month",
+                        "3 months",
+                        "6 months",
+                        "Ongoing"
+                    ]
+                ),
+                FormField(
+                    name="campaign_objectives",
+                    label="Campaign Objectives",
+                    field_type=FormFieldType.MULTISELECT,
+                    required=True,
+                    options=[
+                        "Increase brand awareness",
+                        "Generate leads",
+                        "Drive website traffic",
+                        "Boost sales",
+                        "Improve engagement",
+                        "Build community",
+                        "Launch new product",
+                        "Market expansion"
+                    ]
+                ),
+                FormField(
+                    name="preferred_channels",
+                    label="Preferred Marketing Channels",
+                    field_type=FormFieldType.MULTISELECT,
+                    required=True,
+                    options=[
+                        "Facebook",
+                        "Instagram",
+                        "Twitter/X",
+                        "LinkedIn",
+                        "WhatsApp Business",
+                        "Google Ads",
+                        "Email Marketing",
+                        "SMS Marketing",
+                        "Radio",
+                        "TV",
+                        "Outdoor/Billboard"
+                    ]
+                ),
+                FormField(
+                    name="campaign_start_date",
+                    label="Preferred Start Date",
+                    field_type=FormFieldType.DATE,
+                    required=True,
+                    validation_rules={"min_days_ahead": 3}
+                )
+            ],
+            
+            confirmation_fields=[
+                FormField(
+                    name="analytics_access",
+                    label="Analytics Platform Access",
+                    field_type=FormFieldType.MULTISELECT,
+                    required=False,
+                    options=[
+                        "Google Analytics",
+                        "Facebook Business Manager",
+                        "Instagram Insights",
+                        "LinkedIn Analytics",
+                        "Custom Dashboard"
+                    ]
+                ),
+                FormField(
+                    name="reporting_frequency",
+                    label="Reporting Frequency",
+                    field_type=FormFieldType.SELECT,
+                    required=True,
+                    options=["Daily", "Weekly", "Bi-weekly", "Monthly"]
+                ),
+                FormField(
+                    name="approval_process",
+                    label="Content Approval Process",
+                    field_type=FormFieldType.SELECT,
+                    required=True,
+                    options=[
+                        "Client approves all content",
+                        "Pre-approved templates only",
+                        "Agency has creative freedom",
+                        "Hybrid approach"
+                    ]
+                )
+            ],
+            
+            workflow_nodes=[
+                {"name": "start", "type": "start"},
+                {"name": "market_research", "type": "agent", "config": {"task": "conduct_hyperlocal_market_research"}},
+                {"name": "trend_analysis", "type": "agent", "config": {"task": "analyze_regional_trends"}},
+                {"name": "audience_segmentation", "type": "agent", "config": {"task": "segment_target_audience"}},
+                {"name": "campaign_strategy", "type": "agent", "config": {"task": "develop_campaign_strategy"}},
+                {"name": "content_planning", "type": "agent", "config": {"task": "create_content_calendar"}},
+                {"name": "budget_allocation", "type": "agent", "config": {"task": "optimize_budget_allocation"}},
+                {"name": "campaign_setup", "type": "agent", "config": {"task": "setup_campaign_channels"}},
+                {"name": "performance_tracking", "type": "agent", "config": {"task": "monitor_campaign_performance"}},
+                {"name": "optimization", "type": "agent", "config": {"task": "optimize_campaign_performance"}},
+                {"name": "reporting", "type": "agent", "config": {"task": "generate_performance_reports"}},
+                {"name": "end", "type": "end"}
+            ],
+            
+            workflow_edges=[
+                {"from": "start", "to": "market_research"},
+                {"from": "market_research", "to": "trend_analysis"},
+                {"from": "trend_analysis", "to": "audience_segmentation"},
+                {"from": "audience_segmentation", "to": "campaign_strategy"},
+                {"from": "campaign_strategy", "to": "content_planning"},
+                {"from": "content_planning", "to": "budget_allocation"},
+                {"from": "budget_allocation", "to": "campaign_setup"},
+                {"from": "campaign_setup", "to": "performance_tracking"},
+                {"from": "performance_tracking", "to": "optimization"},
+                {"from": "optimization", "to": "reporting"},
+                {"from": "reporting", "to": "end"}
+            ],
+            
+            business_hours={
+                "monday": {"start": "08:00", "end": "18:00"},
+                "tuesday": {"start": "08:00", "end": "18:00"},
+                "wednesday": {"start": "08:00", "end": "18:00"},
+                "thursday": {"start": "08:00", "end": "18:00"},
+                "friday": {"start": "08:00", "end": "18:00"},
+                "saturday": {"start": "09:00", "end": "15:00"},
+                "sunday": {"closed": True}
+            },
+            
+            advance_booking_days=7,
+            cancellation_policy="3 days advance notice required for campaign modifications",
+            
+            required_integrations=["social_media_apis", "analytics_platforms", "email_marketing"],
+            optional_integrations=["crm_system", "payment_gateway", "mixpost", "mlflow"],
+            
+            supported_regions=["NG", "KE", "ZA", "GH", "UG", "TZ"],
+            supported_currencies=["NGN", "KES", "ZAR", "GHS", "UGX", "TZS"],
+            supported_languages=["en", "ha", "yo", "ig", "sw", "af", "zu"]
+        )
+    
+    @staticmethod
     def get_template(industry: IndustryType) -> IndustryTemplate:
         """Get template for specific industry."""
         templates = {
@@ -697,10 +934,12 @@ class IndustryTemplateFactory:
             IndustryType.HEALTHCARE: IndustryTemplateFactory.create_healthcare_template,
             IndustryType.MANUFACTURING: IndustryTemplateFactory.create_manufacturing_template,
             IndustryType.PRODUCT_RECOMMENDER: IndustryTemplateFactory.create_product_recommender_template,
+            IndustryType.MARKETING_CAMPAIGNS: IndustryTemplateFactory.create_marketing_campaigns_template,
+            IndustryType.COMPLIANCE_WORKFLOWS: IndustryTemplateFactory.create_compliance_workflows_template,
         }
         
         if industry not in templates:
-            raise ValueError(f"Template not available for industry: {industry}")
+            raise ValueError(f"Template not found for industry: {industry}")
         
         return templates[industry]()
     
@@ -713,6 +952,8 @@ class IndustryTemplateFactory:
             IndustryType.HEALTHCARE,
             IndustryType.MANUFACTURING,
             IndustryType.PRODUCT_RECOMMENDER,
+            IndustryType.MARKETING_CAMPAIGNS,
+            IndustryType.COMPLIANCE_WORKFLOWS,
         ]
     
     @staticmethod
@@ -971,10 +1212,202 @@ class IndustryTemplateFactory:
             required_integrations=["ai_engine", "product_catalog", "email", "sms"],
             optional_integrations=[
                 "whatsapp", "payment_gateway", "inventory_management", 
-                "price_monitoring", "analytics", "crm", "social_media"
             ],
             
-            supported_regions=["NG", "KE", "ZA", "GH", "UG", "TZ"],
-            supported_currencies=["NGN", "KES", "ZAR", "GHS", "UGX", "TZS"],
-            supported_languages=["en", "ha", "yo", "ig", "sw", "zu", "af"]
+            supported_regions=["NG", "ZA", "KE", "GH", "UG", "TZ", "RW", "ET"],
+            supported_currencies=["NGN", "ZAR", "KES", "GHS", "UGX", "TZS", "RWF", "ETB"],
+            supported_languages=["en", "ha", "yo", "ig", "sw", "af", "zu", "am", "fr"]
+        )
+    
+    @staticmethod
+    def create_compliance_workflows_template() -> IndustryTemplate:
+        """Create compliance workflows template for regulatory compliance and audit management."""
+        return IndustryTemplate(
+            industry=IndustryType.COMPLIANCE_WORKFLOWS,
+            name="Regulatory Compliance & Audit Management",
+            description="Comprehensive compliance workflow for regulatory adherence, audit trails, and risk management with African market optimizations",
+            
+            booking_form_fields=[
+                FormField(
+                    name="organization_name",
+                    label="Organization Name",
+                    field_type=FormFieldType.TEXT,
+                    required=True,
+                    placeholder="Enter your organization name"
+                ),
+                FormField(
+                    name="organization_type",
+                    label="Organization Type",
+                    field_type=FormFieldType.SELECT,
+                    required=True,
+                    options=[
+                        "Financial Services", "Healthcare", "Technology", "Manufacturing",
+                        "Retail/E-commerce", "Education", "Government", "Non-Profit",
+                        "Professional Services", "Real Estate", "Media & Entertainment"
+                    ]
+                ),
+                FormField(
+                    name="employee_count",
+                    label="Number of Employees",
+                    field_type=FormFieldType.SELECT,
+                    required=True,
+                    options=["1-10", "11-50", "51-200", "201-500", "500+"]
+                ),
+                FormField(
+                    name="compliance_frameworks",
+                    label="Required Compliance Frameworks",
+                    field_type=FormFieldType.MULTISELECT,
+                    required=True,
+                    options=[
+                        "GDPR (General Data Protection Regulation)",
+                        "POPIA (Protection of Personal Information Act - South Africa)",
+                        "CBN (Central Bank of Nigeria Guidelines)",
+                        "ISO 27001 (Information Security)",
+                        "SOC 2 (Service Organization Control)",
+                        "HIPAA (Healthcare)",
+                        "PCI DSS (Payment Card Industry)"
+                    ]
+                ),
+                FormField(
+                    name="business_sector",
+                    label="Primary Business Sector",
+                    field_type=FormFieldType.SELECT,
+                    required=True,
+                    options=[
+                        "Banking & Finance", "Insurance", "Telecommunications",
+                        "Healthcare", "Education", "Government", "Retail",
+                        "Manufacturing", "Technology", "Professional Services"
+                    ]
+                ),
+                FormField(
+                    name="data_processing_activities",
+                    label="Data Processing Activities",
+                    field_type=FormFieldType.MULTISELECT,
+                    required=True,
+                    options=[
+                        "Customer Data Collection", "Financial Transaction Processing",
+                        "Employee Data Management", "Marketing & Analytics",
+                        "Cross-Border Data Transfers", "Third-Party Data Sharing",
+                        "Cloud Data Storage", "Mobile App Data Collection"
+                    ]
+                ),
+                FormField(
+                    name="reporting_frequency",
+                    label="Compliance Reporting Frequency",
+                    field_type=FormFieldType.SELECT,
+                    required=True,
+                    options=["Monthly", "Quarterly", "Semi-Annual", "Annual", "As Required"]
+                ),
+                FormField(
+                    name="budget_range",
+                    label="Compliance Budget Range (Annual)",
+                    field_type=FormFieldType.SELECT,
+                    required=True,
+                    options=[
+                        "Under $10,000", "$10,000 - $50,000", "$50,000 - $100,000",
+                        "$100,000 - $500,000", "Over $500,000"
+                    ]
+                ),
+                FormField(
+                    name="current_compliance_tools",
+                    label="Current Compliance Tools",
+                    field_type=FormFieldType.MULTISELECT,
+                    required=False,
+                    options=[
+                        "Manual Processes", "Spreadsheets", "GRC Platform",
+                        "Audit Management Software", "Risk Assessment Tools",
+                        "Policy Management System", "Training Platform"
+                    ]
+                )
+            ],
+            
+            confirmation_fields=[
+                FormField(
+                    name="compliance_officer_contact",
+                    label="Compliance Officer Contact",
+                    field_type=FormFieldType.EMAIL,
+                    required=True,
+                    placeholder="Enter compliance officer email"
+                ),
+                FormField(
+                    name="implementation_timeline",
+                    label="Preferred Implementation Timeline",
+                    field_type=FormFieldType.SELECT,
+                    required=True,
+                    options=["Immediate (1-2 weeks)", "Standard (3-4 weeks)", "Extended (5-8 weeks)", "Custom Timeline"]
+                ),
+                FormField(
+                    name="data_residency_preference",
+                    label="Data Residency Preference",
+                    field_type=FormFieldType.SELECT,
+                    required=True,
+                    options=["Local (Same Country)", "Regional (Same Continent)", "Global", "Custom Requirements"]
+                )
+            ],
+            
+            workflow_nodes=[
+                {"name": "start", "type": "start"},
+                {"name": "compliance_assessment", "type": "agent", "config": {"task": "assess_current_compliance_status"}},
+                {"name": "regulatory_mapping", "type": "agent", "config": {"task": "map_applicable_regulations"}},
+                {"name": "gap_analysis", "type": "agent", "config": {"task": "identify_compliance_gaps"}},
+                {"name": "policy_generation", "type": "agent", "config": {"task": "generate_compliance_policies"}},
+                {"name": "audit_trail_setup", "type": "agent", "config": {"task": "configure_audit_logging"}},
+                {"name": "compliance_monitoring", "type": "agent", "config": {"task": "setup_real_time_monitoring"}},
+                {"name": "risk_assessment", "type": "agent", "config": {"task": "perform_risk_analysis"}},
+                {"name": "compliance_reporting", "type": "agent", "config": {"task": "configure_automated_reporting"}},
+                {"name": "compliance_training", "type": "agent", "config": {"task": "setup_compliance_training"}},
+                {"name": "compliance_integration", "type": "agent", "config": {"task": "integrate_external_systems"}},
+                {"name": "compliance_testing", "type": "agent", "config": {"task": "test_compliance_controls"}},
+                {"name": "go_live", "type": "agent", "config": {"task": "activate_compliance_monitoring"}},
+                {"name": "end", "type": "end"}
+            ],
+            
+            workflow_edges=[
+                {"from": "start", "to": "compliance_assessment"},
+                {"from": "compliance_assessment", "to": "regulatory_mapping"},
+                {"from": "regulatory_mapping", "to": "gap_analysis"},
+                {"from": "gap_analysis", "to": "policy_generation"},
+                {"from": "policy_generation", "to": "audit_trail_setup"},
+                {"from": "audit_trail_setup", "to": "compliance_monitoring"},
+                {"from": "compliance_monitoring", "to": "risk_assessment"},
+                {"from": "risk_assessment", "to": "compliance_reporting"},
+                {"from": "compliance_reporting", "to": "compliance_training"},
+                {"from": "compliance_training", "to": "compliance_integration"},
+                {"from": "compliance_integration", "to": "compliance_testing"},
+                {"from": "compliance_testing", "to": "go_live"},
+                {"from": "go_live", "to": "end"}
+            ],
+            
+            business_hours={
+                "timezone": "Africa/Lagos",
+                "monday": {"start": "08:00", "end": "17:00"},
+                "tuesday": {"start": "08:00", "end": "17:00"},
+                "wednesday": {"start": "08:00", "end": "17:00"},
+                "thursday": {"start": "08:00", "end": "17:00"},
+                "friday": {"start": "08:00", "end": "17:00"},
+                "saturday": {"start": "09:00", "end": "13:00"},
+                "sunday": {"closed": True}
+            },
+            
+            advance_booking_days=30,
+            cancellation_policy="Compliance workflow changes require 48 hours advance notice. Emergency compliance issues can be addressed immediately with proper authorization.",
+            
+            notification_settings={
+                "email_notifications": True,
+                "sms_notifications": True,
+                "whatsapp_notifications": True,
+                "compliance_alerts": True,
+                "risk_notifications": True,
+                "audit_reminders": True
+            },
+            
+            required_integrations=["audit_system", "compliance_platform", "email", "sms"],
+            optional_integrations=[
+                "whatsapp", "government_apis", "grc_platform", "training_platform",
+                "risk_management", "policy_management", "document_management"
+            ],
+            
+            supported_regions=["NG", "ZA", "KE", "GH", "UG", "TZ", "RW", "ET"],
+            supported_currencies=["NGN", "ZAR", "KES", "GHS", "UGX", "TZS", "RWF", "ETB"],
+            supported_languages=["en", "ha", "yo", "ig", "sw", "af", "zu", "am", "fr"]
         )

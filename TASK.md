@@ -217,7 +217,32 @@
   - [x] Setup template versioning and updates
   - [x] Fix all template versioning test failures (29/29 tests passing)
 
+  - [x] **WORKFLOW-004**: Marketing Campaigns workflow type - COMPLETE (2025-09-08)
+    - [x] Added MARKETING_CAMPAIGNS to IndustryType enum
+    - [x] Created comprehensive Marketing Campaigns template with form fields
+    - [x] Implemented 10 core workflow nodes (MarketResearchNode, TrendAnalysisNode, etc.)
+    - [x] Added Marketing Campaigns API endpoint
+    - [x] Fixed WorkflowState metadata usage (context instead of metadata)
+    - [x] Created comprehensive unit tests (30 tests, 100% pass rate)
+    - [x] African market optimizations (NGN/KES/ZAR currencies, local languages)
+  
+  - [x] **WORKFLOW-005**: Compliance Workflows workflow type - ✅ COMPLETED (2025-09-09)
+    - [x] Implement automated audit trail generation
+    - [x] Create regulatory compliance reporting workflows
+    - [x] Add GDPR/POPIA compliance monitoring
+    - [x] African market compliance optimizations (CBN, POPIA, GDPR)
+    - [x] Comprehensive unit tests (25 tests, 100% pass rate)
+    - [x] API endpoint for compliance workflow creation
+    - [x] Setup government API integrations for tax/regulatory systems
+  
+  - [ ] **WORKFLOW-006**: ERP Integration workflow type
+    - [ ] Implement invoice processing automation
+    - [ ] Create vendor management workflows
+    - [ ] Add SAP, HubSpot, Oracle connector templates
+    - [ ] Setup financial data processing and reconciliation
+
   - **Acceptance**: Templates can be instantiated and customized per tenant - COMPLETE (2025-09-04)
+  - **Next Phase**: Implement missing workflow types per Platform Design Document
 
 ## Phase 3: Integration & UI Layer (Weeks 5-6)
 
@@ -307,17 +332,38 @@
 
 #### Tasks:
 
-- [ ] **DATA-001**: ProAgent-inspired data processing
-  - Implement structured data analysis capabilities
-  - Setup unstructured data processing with LLMs
-  - Create data transformation pipelines
-  - **Acceptance**: System can process and analyze various data formats
+- [ ] **DATA-001**: Native ML Engine - Core Platform Service
+  - [ ] Create ML Engine as core platform capability (`smeflow/core/ml_engine.py`)
+  - [ ] Implement ProAgent data processing framework for structured/unstructured data
+  - [ ] Setup MLflow integration for experiment tracking and model management
+  - [ ] Create ML prediction service with multi-tenant isolation
+  - [ ] Add support for 7 ML model types (customer segmentation, trend analysis, etc.)
+  - [ ] Implement cost tracking and optimization for ML operations
+  - **Acceptance**: All workflows can leverage native ML capabilities
 
-- [ ] **DATA-002**: Hyperlocal intelligence engine
-  - Implement neighborhood trend analysis
-  - Setup local market data aggregation
-  - Create location-aware insights generation
-  - **Acceptance**: System provides relevant local market insights
+- [ ] **DATA-002**: Hyperlocal Intelligence with OpenStreetMap
+  - [ ] Integrate OpenStreetMap Overpass API for business data extraction
+  - [ ] Implement neighborhood-level trend analysis and competitor mapping
+  - [ ] Create business density analysis and opportunity zone identification
+  - [ ] Add geographic context for marketing campaigns and local discovery
+  - [ ] Setup location-aware insights generation for African markets
+  - **Acceptance**: System provides hyperlocal intelligence for all geographic workflows
+
+- [ ] **DATA-003**: Customer Analytics & Behavior Patterns
+  - [ ] Implement customer segmentation using KMeans clustering
+  - [ ] Create behavior pattern recognition and preference analysis
+  - [ ] Add predictive analytics for customer lifetime value and churn
+  - [ ] Setup real-time analytics pipeline for customer insights
+  - [ ] Integrate with existing agent workflows for personalized recommendations
+  - **Acceptance**: Customer analytics enhance all customer-facing workflows
+
+- [ ] **DATA-004**: Market Intelligence & Competitive Analysis
+  - [ ] Create competitive landscape analysis using multi-source data
+  - [ ] Implement market trend detection and opportunity identification
+  - [ ] Add social media sentiment analysis for brand monitoring
+  - [ ] Setup automated competitive intelligence reports
+  - [ ] Integrate with Marketing Campaigns workflow for strategic insights
+  - **Acceptance**: Market intelligence drives strategic decision-making across workflows
 
 ### 4.2 Compliance & Observability
 

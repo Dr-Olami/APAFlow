@@ -858,6 +858,115 @@ async def create_product_recommender_workflow(
         )
 
 
+@router.post("/templates/marketing-campaigns", response_model=WorkflowResponse)
+async def create_marketing_campaigns_workflow(
+    name: str = "Marketing Campaigns Management",
+    user_info: UserInfo = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session)
+):
+    """
+    Create a marketing campaigns workflow with hyperlocal trend analysis.
+    
+    Args:
+        name: Workflow name
+        user_info: Current user information
+        db_session: Database session
+        
+    Returns:
+        Created workflow data
+    """
+    try:
+        manager = WorkflowManager(user_info.tenant_id, db_session)
+        
+        workflow = await manager.create_industry_workflow(
+            industry=IndustryType.MARKETING_CAMPAIGNS,
+            name=name
+        )
+        
+        return WorkflowResponse(
+            id=str(workflow.id),
+            name=workflow.name,
+            description=workflow.description,
+            template_type=workflow.template_type,
+            is_active=workflow.is_active,
+            created_at=workflow.created_at.isoformat(),
+            updated_at=workflow.updated_at.isoformat()
+        )
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create marketing campaigns workflow: {str(e)}"
+        )
+
+
+@router.post("/templates/compliance-workflows", response_model=WorkflowResponse)
+async def create_compliance_workflows_workflow(
+    name: str = "Regulatory Compliance & Audit Management",
+    region: str = "NG",
+    compliance_frameworks: List[str] = ["gdpr", "popia", "cbn"],
+    user_info: UserInfo = Depends(get_current_user),
+    db_session: AsyncSession = Depends(get_db_session)
+):
+    """
+    Create a compliance workflows workflow with regulatory frameworks.
+    
+    Args:
+        name: Workflow name
+        region: Target region for compliance (NG, ZA, KE, etc.)
+        compliance_frameworks: List of compliance frameworks to implement
+        user_info: Current user information
+        db_session: Database session
+        
+    Returns:
+        Created workflow data
+    """
+    try:
+        manager = WorkflowManager(user_info.tenant_id, db_session)
+        
+        # Create custom business rules for compliance
+        custom_business_rules = {
+            "region": region,
+            "compliance_frameworks": compliance_frameworks,
+            "audit_retention_years": 7,
+            "real_time_monitoring": True,
+            "automated_reporting": True,
+            "data_residency_enforcement": region in ["NG", "ZA"],  # CBN and POPIA requirements
+            "multi_language_support": True,
+            "african_market_optimizations": {
+                "cbn_data_residency": region == "NG" and "cbn" in compliance_frameworks,
+                "popia_compliance": region == "ZA" and "popia" in compliance_frameworks,
+                "gdpr_adequacy": "gdpr" in compliance_frameworks,
+                "local_currencies": {
+                    "NG": "NGN", "ZA": "ZAR", "KE": "KES", 
+                    "GH": "GHS", "UG": "UGX", "TZ": "TZS"
+                }.get(region, "USD")
+            }
+        }
+        
+        workflow = await manager.create_industry_workflow(
+            industry=IndustryType.COMPLIANCE_WORKFLOWS,
+            name=name,
+            custom_business_rules=custom_business_rules
+        )
+        
+        return WorkflowResponse(
+            id=str(workflow.id),
+            name=workflow.name,
+            description=workflow.description,
+            template_type=workflow.template_type,
+            is_active=workflow.is_active,
+            created_at=workflow.created_at.isoformat(),
+            updated_at=workflow.updated_at.isoformat()
+        )
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create compliance workflows workflow: {str(e)}"
+        )
+
+
 # Template versioning endpoints
 @router.get("/templates/{industry}/versions", response_model=List[TemplateVersionInfo])
 async def get_template_versions(

@@ -235,7 +235,7 @@
     - [x] API endpoint for compliance workflow creation
     - [x] Setup government API integrations for tax/regulatory systems
   
-  - [x] **WORKFLOW-006**: ERP Integration workflow type
+  - [x] **WORKFLOW-006**: ERP Integration workflow type - ✅ COMPLETED (2025-09-09)
     - [x] Implement invoice processing automation
     - [x] Create vendor management workflows
     - [x] Add SAP, HubSpot, Oracle, local ERP connector templates
@@ -256,11 +256,11 @@
 
 #### Tasks:
 
-- [ ] **UI-001**: Flowise deployment and configuration
-  - Deploy Flowise in Docker container
-  - Configure custom nodes for SMEFlow agents
-  - Setup tenant-aware workspace isolation
-  - **Acceptance**: Flowise UI loads and can create basic workflows
+- [x] **UI-001**: Flowise deployment and configuration - COMPLETE (2025-09-09)
+  - Deploy Flowise in Docker container ✅
+  - Configure custom nodes for SMEFlow agents ✅
+  - Setup tenant-aware workspace isolation ✅
+  - **Acceptance**: Flowise UI loads and can create basic workflows ✅
 
 - [ ] **UI-002**: Custom Flowise nodes for SMEFlow
   - Create custom nodes for Automator, Mentor, Supervisor agents

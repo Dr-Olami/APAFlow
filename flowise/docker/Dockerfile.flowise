@@ -1,0 +1,38 @@
+# SMEFlow Custom Flowise Container
+# Extends official Flowise with multi-tenant African market capabilities
+
+FROM flowiseai/flowise:latest
+
+# Set working directory
+WORKDIR /opt/flowise
+
+# Install additional dependencies for SMEFlow integration
+USER root
+RUN npm install -g axios uuid
+
+# Copy custom SMEFlow nodes
+COPY ./flowise/custom-nodes /opt/flowise/packages/components/nodes/smeflow/
+COPY ./flowise/middleware /opt/flowise/middleware/
+COPY ./flowise/config /opt/flowise/config/
+
+# Install custom node dependencies
+WORKDIR /opt/flowise/packages/components/nodes/smeflow
+RUN npm install
+
+# Set proper permissions
+RUN chown -R node:node /opt/flowise
+RUN chmod +x /opt/flowise/packages/components/nodes/smeflow/*.js
+
+# Switch back to node user
+USER node
+WORKDIR /opt/flowise
+
+# Expose Flowise port
+EXPOSE 3000
+
+# Health check for container readiness
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD curl -f http://localhost:3000/api/v1/ping || exit 1
+
+# Start Flowise with custom configuration
+CMD ["npm", "start"]

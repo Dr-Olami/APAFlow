@@ -1,0 +1,66 @@
+{
+  "database": {
+    "type": "postgres",
+    "host": "db",
+    "port": 5432,
+    "database": "smeflow",
+    "username": "smeflow",
+    "password": "smeflow123",
+    "schema": "flowise"
+  },
+  "multiTenant": {
+    "enabled": true,
+    "isolation": "database",
+    "tenantHeader": "X-Tenant-ID",
+    "defaultTenant": null,
+    "requireTenantId": true
+  },
+  "africanMarket": {
+    "defaultRegion": "africa-west",
+    "supportedCurrencies": ["NGN", "KES", "ZAR", "GHS", "UGX", "TZS", "RWF", "ETB"],
+    "supportedLanguages": ["en", "ha", "yo", "ig", "sw", "am", "fr", "ar"],
+    "defaultTimezone": "Africa/Lagos",
+    "phoneFormats": {
+      "nigeria": "+234",
+      "kenya": "+254",
+      "south_africa": "+27",
+      "ghana": "+233",
+      "uganda": "+256",
+      "tanzania": "+255",
+      "rwanda": "+250",
+      "ethiopia": "+251"
+    }
+  },
+  "smeflowIntegration": {
+    "apiUrl": "http://smeflow:8000",
+    "apiVersion": "v1",
+    "timeout": 30000,
+    "retries": 3,
+    "endpoints": {
+      "agents": "/api/v1/agents",
+      "workflows": "/api/v1/workflows",
+      "tenants": "/api/v1/tenants"
+    }
+  },
+  "security": {
+    "cors": {
+      "origins": ["*"],
+      "credentials": true
+    },
+    "rateLimit": {
+      "windowMs": 900000,
+      "max": 100,
+      "perTenant": true
+    },
+    "encryption": {
+      "algorithm": "aes-256-gcm",
+      "keyRotation": "30d"
+    }
+  },
+  "logging": {
+    "level": "info",
+    "format": "json",
+    "auditTrail": true,
+    "tenantIsolation": true
+  }
+}

@@ -1,0 +1,15 @@
+FROM flowiseai/flowise:latest
+
+# Create the .flowise directory and logs subdirectory with proper permissions
+USER root
+RUN mkdir -p /root/.flowise/logs && \
+    chmod -R 755 /root/.flowise
+
+# Switch back to the default user
+USER node
+
+# Expose port
+EXPOSE 3000
+
+# Start Flowise
+CMD ["npx", "flowise", "start"]

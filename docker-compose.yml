@@ -116,7 +116,7 @@ services:
   flowise:
     build:
       context: .
-      dockerfile: flowise/docker/Dockerfile.flowise
+      dockerfile: flowise/docker/Dockerfile.flowise.simple
     ports:
       - "3000:3000"
     environment:
@@ -129,23 +129,12 @@ services:
       - DATABASE_NAME=smeflow
       - DATABASE_USER=smeflow
       - DATABASE_PASSWORD=smeflow123
-      - APIKEY_PATH=/root/.flowise
-      - SECRETKEY_PATH=/root/.flowise
-      - LOG_LEVEL=info
-      - LOG_PATH=/root/.flowise/logs
-      - BLOB_STORAGE_PATH=/root/.flowise/storage
       - DISABLE_FLOWISE_TELEMETRY=true
       - CORS_ORIGINS=*
-      - SMEFLOW_API_URL=http://smeflow:8000
-      - TENANT_ISOLATION_ENABLED=true
     volumes:
       - flowise_data:/root/.flowise
-      - ./flowise/custom-nodes:/opt/flowise/packages/components/nodes/smeflow
-      - ./flowise/middleware:/opt/flowise/middleware
-      - ./flowise/config:/opt/flowise/config
     depends_on:
       - db
-      - smeflow
     restart: unless-stopped
 
 volumes:

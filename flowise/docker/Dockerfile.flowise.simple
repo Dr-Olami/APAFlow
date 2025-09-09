@@ -1,9 +1,11 @@
 FROM flowiseai/flowise:latest
 
-# Create the .flowise directory and logs subdirectory with proper permissions
+# Create both log directories with proper permissions
 USER root
 RUN mkdir -p /root/.flowise/logs && \
-    chmod -R 755 /root/.flowise
+    mkdir -p /usr/local/lib/node_modules/flowise/logs && \
+    chmod -R 755 /root/.flowise && \
+    chmod -R 755 /usr/local/lib/node_modules/flowise/logs
 
 # Switch back to the default user
 USER node

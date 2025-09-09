@@ -15,5 +15,5 @@ USER node
 # Expose port
 EXPOSE 3000
 
-# Start Flowise using the same command as the base image
-CMD ["start"]
+# Use the same entrypoint as the base image (no CMD override)
+# The base image already has the correct startup command

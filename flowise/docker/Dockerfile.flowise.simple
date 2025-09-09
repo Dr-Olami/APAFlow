@@ -15,5 +15,5 @@ USER node
 # Expose port
 EXPOSE 3000
 
-# Start Flowise with correct command
-CMD ["flowise", "start"]
+# Start Flowise using the same command as the base image
+CMD ["start"]

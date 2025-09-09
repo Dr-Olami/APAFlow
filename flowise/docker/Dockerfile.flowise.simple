@@ -1,11 +1,13 @@
 FROM flowiseai/flowise:latest
 
-# Create both log directories with proper permissions
+# Create both log directories with proper permissions and ownership
 USER root
 RUN mkdir -p /root/.flowise/logs && \
     mkdir -p /usr/local/lib/node_modules/flowise/logs && \
-    chmod -R 755 /root/.flowise && \
-    chmod -R 755 /usr/local/lib/node_modules/flowise/logs
+    chmod -R 777 /root/.flowise && \
+    chmod -R 777 /usr/local/lib/node_modules/flowise/logs && \
+    chown -R node:node /root/.flowise && \
+    chown -R node:node /usr/local/lib/node_modules/flowise/logs
 
 # Switch back to the default user
 USER node
@@ -13,5 +15,5 @@ USER node
 # Expose port
 EXPOSE 3000
 
-# Start Flowise
-CMD ["npx", "flowise", "start"]
+# Start Flowise with correct command
+CMD ["flowise", "start"]

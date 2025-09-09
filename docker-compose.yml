@@ -123,18 +123,12 @@ services:
       - PORT=3000
       - FLOWISE_USERNAME=admin
       - FLOWISE_PASSWORD=admin123
-      - DATABASE_TYPE=postgres
-      - DATABASE_HOST=db
-      - DATABASE_PORT=5432
-      - DATABASE_NAME=smeflow
-      - DATABASE_USER=smeflow
-      - DATABASE_PASSWORD=smeflow123
+      - DATABASE_TYPE=sqlite
+      - DATABASE_PATH=/root/.flowise/database.sqlite
       - DISABLE_FLOWISE_TELEMETRY=true
       - CORS_ORIGINS=*
     volumes:
       - flowise_data:/root/.flowise
-    depends_on:
-      - db
     restart: unless-stopped
 
 volumes:

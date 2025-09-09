@@ -1,8 +1,9 @@
 FROM flowiseai/flowise:latest
 
-# Create both log directories with proper permissions and ownership
+# Create directories with proper permissions and ownership for SQLite
 USER root
 RUN mkdir -p /root/.flowise/logs && \
+    mkdir -p /root/.flowise/database && \
     mkdir -p /usr/local/lib/node_modules/flowise/logs && \
     chmod -R 777 /root/.flowise && \
     chmod -R 777 /usr/local/lib/node_modules/flowise/logs && \

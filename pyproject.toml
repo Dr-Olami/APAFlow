@@ -91,9 +91,9 @@ voice = [
 
 [project.urls]
 Homepage = "https://sme-flow.org"
-Repository = "https://github.com/smeflow/smeflow"
+Repository = "https://github.com/Dr-Olami/APAFlow"
 Documentation = "https://docs.sme-flow.org"
-Issues = "https://github.com/smeflow/smeflow/issues"
+Issues = "https://github.com/Dr-Olami/APAFlow/issues"
 
 [project.scripts]
 smeflow = "smeflow.main:main"

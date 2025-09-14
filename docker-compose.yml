@@ -124,7 +124,7 @@ services:
       - FLOWISE_USERNAME=admin
       - FLOWISE_PASSWORD=admin123
       - DATABASE_TYPE=sqlite
-      - DATABASE_PATH=/root/.flowise/database.sqlite
+      - DATABASE_PATH=/tmp/flowise.sqlite
       - DISABLE_FLOWISE_TELEMETRY=true
       - CORS_ORIGINS=*
     volumes:

@@ -126,9 +126,16 @@ services:
       - DISABLE_FLOWISE_TELEMETRY=true
       - CORS_ORIGINS=*
       - FLOWISE_SECRETKEY_OVERWRITE=mySecretKey123
+      # Authentication Configuration
+      # - FLOWISE_USERNAME=smeflow_admin
+      # - FLOWISE_PASSWORD=SMEFlow2024!
+      # - FLOWISE_FILE_SIZE_LIMIT=50mb
+      # - FLOWISE_OVERRIDE_DATABASE=true
     volumes:
       - flowise_data:/root/.flowise
     restart: unless-stopped
+    depends_on:
+      - db
 
 volumes:
   postgres_data:

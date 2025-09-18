@@ -73,6 +73,9 @@
 - **Communication**: WhatsApp Business, SMS gateways
 - **ERP/CRM**: SAP, HubSpot, custom systems
 - **Government APIs**: Tax systems, regulatory compliance
+- **Social Media Platforms**: Facebook/Meta, Instagram, LinkedIn, Twitter/X, TikTok (see [Social Media Integrations](./SOCIAL_MEDIA_INTEGRATIONS.md))
+- **Content Management**: Canva API, Figma API, WordPress, Contentful, Strapi (planned)
+- **AI Services**: OpenAI GPT-4, Stable Diffusion XL, DALL-E 3, Claude 3 (planned)
 
 **Security Features**:
 

@@ -256,17 +256,24 @@
 
 #### Tasks:
 
-- [x] **UI-001**: Flowise deployment and configuration - COMPLETE (2025-09-09)
-  - Deploy Flowise in Docker container ✅
-  - Configure custom nodes for SMEFlow agents ✅
-  - Setup tenant-aware workspace isolation ✅
+- [x] **UI-001**: Flowise deployment and configuration - ✅ COMPLETE (2025-09-15)
+  - [x] Deploy Flowise in Docker container ✅
+  - [x] Resolve container restart and permission issues ✅
+  - [x] Fix database migration conflicts (switched to SQLite) ✅
+  - [x] Configure CORS and authentication for Codespaces ✅
+  - [x] Complete initial setup and verify UI access ✅
   - **Acceptance**: Flowise UI loads and can create basic workflows ✅
 
-- [ ] **UI-002**: Custom Flowise nodes for SMEFlow
-  - Create custom nodes for Automator, Mentor, Supervisor agents
-  - Implement SMEFlow-specific workflow components
-  - Setup node configuration and validation
-  - **Acceptance**: Custom nodes appear in Flowise and can be configured
+- [ ] **UI-002**: Custom Flowise nodes for SMEFlow - 🚧 IN PROGRESS (2025-09-16)
+  - [ ] Analyze existing SMEFlowAgent.js custom node structure
+  - [ ] Create Automator agent custom node for task execution
+  - [ ] Create Mentor agent custom node for guidance and recommendations
+  - [ ] Create Supervisor agent custom node for workflow orchestration
+  - [ ] Implement SMEFlow-specific workflow components (African market integrations)
+  - [ ] Setup node configuration and validation with tenant isolation
+  - [ ] Test custom nodes in Flowise UI and verify functionality
+  - **Acceptance**: Custom nodes appear in Flowise and can be configured with SMEFlow agents
+  - **Dependencies**: Completed UI-001, requires SMEFlow agent system integration
 
 - [ ] **UI-003**: Workflow builder integration
   - Connect Flowise workflows to LangGraph execution engine

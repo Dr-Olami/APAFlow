@@ -121,12 +121,11 @@ services:
       - "3000:3000"
     environment:
       - PORT=3000
-      - FLOWISE_USERNAME=admin
-      - FLOWISE_PASSWORD=admin123
       - DATABASE_TYPE=sqlite
       - DATABASE_PATH=/tmp/flowise.sqlite
       - DISABLE_FLOWISE_TELEMETRY=true
       - CORS_ORIGINS=*
+      - FLOWISE_SECRETKEY_OVERWRITE=mySecretKey123
     volumes:
       - flowise_data:/root/.flowise
     restart: unless-stopped

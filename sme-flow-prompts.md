@@ -48,7 +48,7 @@
 - **Payment**: M-Pesa, Paystack, Flutterwave
 - **E-commerce**: Jumia API integration
 - **Communication**: WhatsApp Business API
-- **Social Media**: Mixpost for multi-platform posting
+- **Social Media**: Multi-platform consistency system with AI content generation
 - **Booking**: Cal.com integration
 - **Voice**: LiveKit for real-time voice communication and calling
 - **HITL**: Human-in-the-Loop framework for agent supervision
@@ -93,6 +93,13 @@
    - Automated delay detection and vendor escalation
    - Compliance with local financial regulations
 
+6. **Social Media Manager** (Marketing)
+   - Impact: 60% content creation time reduction
+   - Multi-platform brand consistency (Meta, TikTok, LinkedIn, Twitter, Instagram)
+   - AI-powered content generation with African market optimization
+   - Automated scheduling with timezone optimization
+   - Keyword research and hashtag optimization in local languages
+
 ### Core Capabilities
 - **No-Code Workflow Builder**: Drag-and-drop interface via Flowise
 - **Multilingual AI Agents**: Support for African languages
@@ -100,6 +107,8 @@
 - **Self-Healing Workflows**: Adaptive routing for system changes
 - **Voice Automation**: Calls, reminders, and real-time communication
 - **Compliance Suite**: Automated audits and regulatory adherence
+- **Social Media Consistency**: Multi-platform brand management with AI content generation
+- **Multi-Tenant Isolation**: Complete tenant separation for brand guidelines and preferences
 
 ### User Experience
 - **Dashboard**: Flowise-based with Agent Builder

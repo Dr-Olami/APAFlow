@@ -133,7 +133,10 @@ services:
       # - FLOWISE_OVERRIDE_DATABASE=true
     volumes:
       - flowise_data:/root/.flowise
-      - ./flowise/custom-nodes:/usr/local/lib/node_modules/flowise/node_modules/flowise-components/nodes/smeflow
+      - ./flowise/custom-nodes/agents:/usr/local/lib/node_modules/flowise/node_modules/flowise-components/nodes/agents
+      - ./flowise/custom-nodes/chains:/usr/local/lib/node_modules/flowise/node_modules/flowise-components/nodes/chains
+      - ./flowise/custom-nodes/tools:/usr/local/lib/node_modules/flowise/node_modules/flowise-components/nodes/tools
+      - ./flowise/custom-nodes/utilities:/usr/local/lib/node_modules/flowise/node_modules/flowise-components/nodes/utilities
     restart: unless-stopped
     depends_on:
       - db

@@ -1,17 +1,17 @@
-const { INode, INodeData, INodeParams } = require('flowise-components');
-const axios = require('axios');
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const axios = require("axios");
 
-class SMEFlowTenantManager {
+class SMEFlowTenantManager_Utilities {
     constructor() {
-        this.label = 'SMEFlow Tenant Manager'
-        this.name = 'smeflowTenantManager'
-        this.version = 1.0
-        this.type = 'SMEFlowTenantManager'
-        this.icon = 'smeflow.svg'
-        this.category = 'SMEFlow'
-        this.description = 'Manage multi-tenant workspace isolation and tenant-specific configurations'
-        this.baseClasses = [this.type]
-
+        this.label = 'SMEFlow Tenant Manager';
+        this.name = 'smeflowTenantManager';
+        this.version = 1.0;
+        this.type = 'SMEFlowTenantManager';
+        this.icon = 'tenant.svg';
+        this.category = 'SMEFlow';
+        this.description = 'Manage multi-tenant configurations and validate tenant access for SMEFlow operations';
+        this.baseClasses = [this.type];
         this.inputs = [
             {
                 label: 'Operation',
@@ -19,124 +19,176 @@ class SMEFlowTenantManager {
                 type: 'options',
                 options: [
                     {
+                        label: 'Validate Tenant',
+                        name: 'validate'
+                    },
+                    {
+                        label: 'Create Tenant Config',
+                        name: 'create'
+                    },
+                    {
+                        label: 'Update Tenant Config',
+                        name: 'update'
+                    },
+                    {
                         label: 'Get Tenant Info',
-                        name: 'get_tenant'
-                    },
-                    {
-                        label: 'List Tenant Agents',
-                        name: 'list_agents'
-                    },
-                    {
-                        label: 'List Tenant Workflows',
-                        name: 'list_workflows'
-                    },
-                    {
-                        label: 'Get Usage Statistics',
-                        name: 'get_usage'
-                    },
-                    {
-                        label: 'Validate Tenant Access',
-                        name: 'validate_access'
+                        name: 'get'
                     }
                 ],
-                default: 'get_tenant'
+                default: 'validate'
             },
             {
                 label: 'Tenant ID',
                 name: 'tenantId',
                 type: 'string',
-                placeholder: 'Enter tenant UUID',
-                description: 'Multi-tenant isolation identifier'
+                placeholder: 'Enter tenant UUID (e.g., 550e8400-e29b-41d4-a716-446655440000)',
+                description: 'Unique identifier for the tenant'
+            },
+            {
+                label: 'Tenant Name',
+                name: 'tenantName',
+                type: 'string',
+                placeholder: 'Enter tenant name (e.g., ABC Consulting Ltd)',
+                description: 'Human-readable name for the tenant',
+                optional: true
+            },
+            {
+                label: 'Tenant Configuration',
+                name: 'tenantConfig',
+                type: 'json',
+                placeholder: '{"region": "nigeria", "currency": "NGN", "timezone": "Africa/Lagos", "business_type": "consulting"}',
+                description: 'JSON configuration for tenant-specific settings',
+                optional: true
+            },
+            {
+                label: 'African Market Settings',
+                name: 'marketSettings',
+                type: 'json',
+                placeholder: '{"languages": ["en", "ha", "yo"], "payment_methods": ["paystack", "flutterwave"], "phone_format": "+234"}',
+                description: 'African market-specific configurations',
+                optional: true
             },
             {
                 label: 'SMEFlow API URL',
                 name: 'apiUrl',
                 type: 'string',
                 default: 'http://smeflow:8000',
-                description: 'SMEFlow API endpoint'
+                description: 'SMEFlow API endpoint URL'
             },
             {
                 label: 'API Key',
                 name: 'apiKey',
                 type: 'password',
                 placeholder: 'Enter SMEFlow API key',
+                description: 'Authentication key for SMEFlow API',
                 optional: true
             }
-        ]
+        ];
     }
 
-    async init(nodeData) {
-        const operation = nodeData.inputs?.operation || 'get_tenant'
-        const tenantId = nodeData.inputs?.tenantId
-        const apiUrl = nodeData.inputs?.apiUrl || 'http://smeflow:8000'
-        const apiKey = nodeData.inputs?.apiKey
+    async init(nodeData, _, options) {
+        const operation = nodeData.inputs?.operation || 'validate';
+        const tenantId = nodeData.inputs?.tenantId;
+        const tenantName = nodeData.inputs?.tenantName;
+        const tenantConfig = nodeData.inputs?.tenantConfig;
+        const marketSettings = nodeData.inputs?.marketSettings;
+        const apiUrl = nodeData.inputs?.apiUrl || 'http://smeflow:8000';
+        const apiKey = nodeData.inputs?.apiKey;
 
         if (!tenantId) {
-            throw new Error('Tenant ID is required for multi-tenant operations')
+            throw new Error('Tenant ID is required for all tenant operations');
+        }
+
+        // Validate UUID format
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        if (!uuidRegex.test(tenantId)) {
+            throw new Error('Tenant ID must be a valid UUID format');
         }
 
         try {
-            // Prepare headers with tenant isolation
+            // Parse configurations
+            const config = JSON.parse(tenantConfig || '{}');
+            const marketConfig = JSON.parse(marketSettings || '{}');
+            
+            // Default African market configurations
+            const defaultMarketConfig = {
+                region: 'africa-west',
+                currency: 'NGN',
+                timezone: 'Africa/Lagos',
+                languages: ['en', 'ha', 'yo', 'ig'],
+                phone_format: '+234',
+                payment_methods: ['paystack', 'flutterwave'],
+                business_hours: {
+                    start: '08:00',
+                    end: '18:00',
+                    timezone: 'Africa/Lagos'
+                },
+                compliance: {
+                    gdpr_enabled: true,
+                    popia_enabled: true,
+                    cbn_compliant: true
+                }
+            };
+
+            const finalMarketConfig = { ...defaultMarketConfig, ...marketConfig };
+            
+            // Prepare headers
             const headers = {
                 'Content-Type': 'application/json',
                 'X-Tenant-ID': tenantId
-            }
+            };
             
             if (apiKey) {
-                headers['Authorization'] = `Bearer ${apiKey}`
+                headers['Authorization'] = `Bearer ${apiKey}`;
             }
 
-            let endpoint = ''
-            let method = 'GET'
+            // Create tenant management request
+            const tenantRequest = {
+                operation: operation,
+                tenant_id: tenantId,
+                tenant_name: tenantName,
+                config: {
+                    ...config,
+                    ...finalMarketConfig,
+                    source: 'flowise',
+                    workflow_id: nodeData.instance?.id,
+                    created_at: new Date().toISOString()
+                }
+            };
 
-            switch (operation) {
-                case 'get_tenant':
-                    endpoint = `/api/v1/tenants/${tenantId}`
-                    break
-                case 'list_agents':
-                    endpoint = `/api/v1/agents`
-                    break
-                case 'list_workflows':
-                    endpoint = `/api/v1/workflows`
-                    break
-                case 'get_usage':
-                    endpoint = `/api/v1/tenants/${tenantId}/usage`
-                    break
-                case 'validate_access':
-                    endpoint = `/api/v1/tenants/${tenantId}/validate`
-                    break
-                default:
-                    throw new Error(`Unknown operation: ${operation}`)
-            }
-
-            // Execute API request
-            const response = await axios({
-                method,
-                url: `${apiUrl}${endpoint}`,
-                headers,
-                timeout: 10000
-            })
+            // Execute tenant operation via SMEFlow API
+            const response = await axios.post(
+                `${apiUrl}/api/v1/tenant/${operation}`,
+                tenantRequest,
+                { headers, timeout: 30000 }
+            );
 
             return {
                 success: true,
                 operation: operation,
                 tenant_id: tenantId,
-                data: response.data,
-                timestamp: new Date().toISOString()
-            }
+                tenant_name: tenantName || response.data.tenant_name,
+                tenant_status: response.data.status,
+                tenant_config: response.data.config,
+                market_config: finalMarketConfig,
+                permissions: response.data.permissions,
+                created_at: response.data.created_at,
+                updated_at: response.data.updated_at
+            };
 
         } catch (error) {
-            console.error('SMEFlow Tenant Manager error:', error)
+            console.error('SMEFlow Tenant Manager error:', error);
             
             return {
                 success: false,
                 operation: operation,
                 tenant_id: tenantId,
                 error: error.message,
+                error_code: error.response?.status || 'UNKNOWN',
                 timestamp: new Date().toISOString()
-            }
+            };
         }
     }
 }
 
-module.exports = { nodeClass: SMEFlowTenantManager }
+module.exports = { nodeClass: SMEFlowTenantManager_Utilities };

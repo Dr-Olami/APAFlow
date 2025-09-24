@@ -1,17 +1,17 @@
-const { INode, INodeData, INodeParams } = require('flowise-components');
-const axios = require('axios');
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const axios = require("axios");
 
-class SMEFlowAutomator {
+class SMEFlowAutomator_Agents {
     constructor() {
-        this.label = 'SMEFlow Automator Agent'
-        this.name = 'smeflowAutomator'
-        this.version = 1.0
-        this.type = 'SMEFlowAutomator'
-        this.icon = 'automator.svg'
-        this.category = 'SMEFlow Agents'
-        this.description = 'Execute automated tasks with African market integrations (M-Pesa, APIs, data processing)'
-        this.baseClasses = [this.type]
-
+        this.label = 'SMEFlow Automator Agent';
+        this.name = 'smeflowAutomator';
+        this.version = 1.0;
+        this.type = 'SMEFlowAutomator';
+        this.icon = 'automator.svg';
+        this.category = 'SMEFlow Agents';
+        this.description = 'Execute automated tasks with African market integrations (M-Pesa, APIs, data processing)';
+        this.baseClasses = [this.type];
         this.inputs = [
             {
                 label: 'Task Type',
@@ -57,45 +57,29 @@ class SMEFlowAutomator {
                 label: 'Tenant ID',
                 name: 'tenantId',
                 type: 'string',
-                placeholder: 'Enter tenant UUID',
-                description: 'Multi-tenant isolation identifier'
+                placeholder: 'Enter tenant UUID (e.g., 550e8400-e29b-41d4-a716-446655440000)',
+                description: 'Multi-tenant isolation identifier for secure data separation'
             },
             {
                 label: 'Task Configuration',
                 name: 'taskConfig',
                 type: 'json',
-                placeholder: '{"endpoint": "https://api.example.com", "method": "POST", "headers": {}}',
-                description: 'Task-specific configuration parameters'
+                placeholder: '{"priority": "high", "auto_assign": true, "notification_channels": ["email", "whatsapp"]}',
+                description: 'JSON configuration for the automation task'
             },
             {
                 label: 'Input Data',
                 name: 'inputData',
                 type: 'json',
-                placeholder: '{"customer_id": "12345", "amount": 1000, "currency": "NGN"}',
-                description: 'Input data for task execution'
+                placeholder: '{"customer_name": "John Doe", "email": "john@example.com", "phone": "+234801234567"}',
+                description: 'JSON input data for task processing'
             },
             {
-                label: 'African Market Settings',
-                name: 'marketSettings',
+                label: 'African Market Config',
+                name: 'marketConfig',
                 type: 'json',
-                placeholder: '{"region": "nigeria", "currency": "NGN", "phone_format": "+234"}',
-                description: 'African market-specific settings',
-                optional: true
-            },
-            {
-                label: 'Tools Configuration',
-                name: 'toolsConfig',
-                type: 'json',
-                placeholder: '{"tools": ["api_client", "data_validator", "payment_processor"]}',
-                description: 'Available tools for the automator agent',
-                optional: true
-            },
-            {
-                label: 'Retry Configuration',
-                name: 'retryConfig',
-                type: 'json',
-                placeholder: '{"max_retries": 3, "retry_delay": 5, "exponential_backoff": true}',
-                description: 'Retry settings for failed tasks',
+                placeholder: '{"region": "nigeria", "currency": "NGN", "language": "en", "phone_format": "+234"}',
+                description: 'African market-specific configuration',
                 optional: true
             },
             {
@@ -103,44 +87,41 @@ class SMEFlowAutomator {
                 name: 'apiUrl',
                 type: 'string',
                 default: 'http://smeflow:8000',
-                description: 'SMEFlow API endpoint'
+                description: 'SMEFlow API endpoint URL'
             },
             {
                 label: 'API Key',
                 name: 'apiKey',
                 type: 'password',
                 placeholder: 'Enter SMEFlow API key',
+                description: 'Authentication key for SMEFlow API',
                 optional: true
             }
-        ]
+        ];
     }
 
-    async init(nodeData) {
-        const taskType = nodeData.inputs?.taskType || 'api_integration'
-        const tenantId = nodeData.inputs?.tenantId
-        const taskConfig = nodeData.inputs?.taskConfig
-        const inputData = nodeData.inputs?.inputData
-        const marketSettings = nodeData.inputs?.marketSettings
-        const toolsConfig = nodeData.inputs?.toolsConfig
-        const retryConfig = nodeData.inputs?.retryConfig
-        const apiUrl = nodeData.inputs?.apiUrl || 'http://smeflow:8000'
-        const apiKey = nodeData.inputs?.apiKey
+    async init(nodeData, _, options) {
+        const taskType = nodeData.inputs?.taskType || 'api_integration';
+        const tenantId = nodeData.inputs?.tenantId;
+        const taskConfig = nodeData.inputs?.taskConfig;
+        const inputData = nodeData.inputs?.inputData;
+        const marketConfig = nodeData.inputs?.marketConfig;
+        const apiUrl = nodeData.inputs?.apiUrl || 'http://smeflow:8000';
+        const apiKey = nodeData.inputs?.apiKey;
 
         if (!tenantId) {
-            throw new Error('Tenant ID is required for multi-tenant isolation')
+            throw new Error('Tenant ID is required for multi-tenant isolation');
         }
 
         try {
             // Parse configurations
-            const config = JSON.parse(taskConfig || '{}')
-            const input = JSON.parse(inputData || '{}')
-            const africanMarketSettings = JSON.parse(marketSettings || '{}')
-            const tools = JSON.parse(toolsConfig || '{}')
-            const retry = JSON.parse(retryConfig || '{}')
+            const config = JSON.parse(taskConfig || '{}');
+            const data = JSON.parse(inputData || '{}');
+            const africanMarketConfig = JSON.parse(marketConfig || '{}');
             
             // Default African market optimizations
-            const defaultMarketSettings = {
-                region: 'nigeria',
+            const defaultMarketConfig = {
+                region: 'africa-west',
                 currency: 'NGN',
                 timezone: 'Africa/Lagos',
                 languages: ['en', 'ha', 'yo', 'ig'],
@@ -149,125 +130,73 @@ class SMEFlowAutomator {
                     start: '08:00',
                     end: '18:00',
                     timezone: 'Africa/Lagos'
-                },
-                payment_methods: ['mpesa', 'paystack', 'flutterwave'],
-                local_apis: {
-                    sms_gateway: 'africas_talking',
-                    payment_gateway: 'paystack',
-                    bank_verification: 'mono'
                 }
-            }
+            };
 
-            const finalMarketSettings = { ...defaultMarketSettings, ...africanMarketSettings }
-            
-            // Default tools for automator agents
-            const defaultTools = {
-                tools: [
-                    'api_client',
-                    'data_validator', 
-                    'payment_processor',
-                    'notification_sender',
-                    'file_processor',
-                    'database_client',
-                    'web_scraper'
-                ],
-                african_integrations: {
-                    mpesa: finalMarketSettings.payment_methods.includes('mpesa'),
-                    paystack: finalMarketSettings.payment_methods.includes('paystack'),
-                    africas_talking: finalMarketSettings.local_apis.sms_gateway === 'africas_talking'
-                }
-            }
-
-            const finalTools = { ...defaultTools, ...tools }
-            
-            // Default retry configuration
-            const defaultRetry = {
-                max_retries: 3,
-                retry_delay: 5,
-                exponential_backoff: true,
-                retry_on_status: [500, 502, 503, 504, 429]
-            }
-
-            const finalRetry = { ...defaultRetry, ...retry }
+            const finalMarketConfig = { ...defaultMarketConfig, ...africanMarketConfig };
             
             // Prepare headers with tenant isolation
             const headers = {
                 'Content-Type': 'application/json',
-                'X-Tenant-ID': tenantId,
-                'X-Agent-Type': 'automator'
-            }
+                'X-Tenant-ID': tenantId
+            };
             
             if (apiKey) {
-                headers['Authorization'] = `Bearer ${apiKey}`
+                headers['Authorization'] = `Bearer ${apiKey}`;
             }
 
-            // Create automator agent execution request
-            const automatorRequest = {
-                type: 'automator',
+            // Create automation request
+            const automationRequest = {
                 task_type: taskType,
+                tenant_id: tenantId,
                 config: {
                     ...config,
-                    tenant_id: tenantId,
-                    market_settings: finalMarketSettings,
-                    tools: finalTools,
-                    retry_config: finalRetry,
-                    execution_context: {
-                        source: 'flowise',
-                        node_id: nodeData.instance?.id,
-                        workflow_id: nodeData.instance?.chatflowId,
-                        timestamp: new Date().toISOString()
-                    }
+                    ...finalMarketConfig,
+                    source: 'flowise',
+                    workflow_id: nodeData.instance?.id,
+                    created_at: new Date().toISOString()
                 },
-                input: input,
-                context: {
-                    task_type: taskType,
-                    african_market: true,
-                    multi_tenant: true,
-                    source: 'flowise_automator_node'
+                input_data: data,
+                execution_options: {
+                    async: false,
+                    timeout: 120,
+                    retry_on_failure: true,
+                    max_retries: 3
                 }
-            }
+            };
 
-            // Execute automator agent via SMEFlow API
+            // Execute automation via SMEFlow API
             const response = await axios.post(
-                `${apiUrl}/api/v1/agents/automator/execute`,
-                automatorRequest,
-                { headers, timeout: 60000 }
-            )
+                `${apiUrl}/api/v1/automator/execute`,
+                automationRequest,
+                { headers, timeout: 120000 }
+            );
 
             return {
                 success: true,
-                agent_type: 'automator',
-                task_type: taskType,
-                agent_id: response.data.agent_id,
+                task_id: response.data.task_id,
                 execution_id: response.data.execution_id,
+                status: response.data.status,
                 result: response.data.result,
-                processed_data: response.data.processed_data,
-                api_calls_made: response.data.api_calls_made,
-                tools_used: response.data.tools_used,
                 cost_usd: response.data.cost_usd,
-                tokens_used: response.data.tokens_used,
                 execution_time: response.data.execution_time,
-                retry_attempts: response.data.retry_attempts,
                 tenant_id: tenantId,
-                market_settings: finalMarketSettings,
-                timestamp: new Date().toISOString()
-            }
+                task_type: taskType,
+                market_config: finalMarketConfig
+            };
 
         } catch (error) {
-            console.error('SMEFlow Automator Agent execution error:', error)
+            console.error('SMEFlow Automator execution error:', error);
             
             return {
                 success: false,
-                agent_type: 'automator',
-                task_type: taskType,
                 error: error.message,
-                error_code: error.response?.status,
                 tenant_id: tenantId,
-                timestamp: new Date().toISOString(),
-                retry_recommended: error.response?.status >= 500
-            }
+                task_type: taskType,
+                timestamp: new Date().toISOString()
+            };
         }
     }
 }
 
-module.exports = { nodeClass: SMEFlowAutomator }
+module.exports = { nodeClass: SMEFlowAutomator_Agents };

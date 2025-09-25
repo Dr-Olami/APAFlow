@@ -1,17 +1,17 @@
-const { INode, INodeData, INodeParams } = require('flowise-components');
-const axios = require('axios');
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const axios = require("axios");
 
-class SMEFlowAfricanIntegrations {
+class SMEFlowAfricanIntegrations_Tools {
     constructor() {
-        this.label = 'SMEFlow African Market Integrations'
-        this.name = 'smeflowAfricanIntegrations'
-        this.version = 1.0
-        this.type = 'SMEFlowAfricanIntegrations'
-        this.icon = 'africa.svg'
-        this.category = 'SMEFlow Integrations'
-        this.description = 'Connect with African market services (M-Pesa, Paystack, Africa\'s Talking, local APIs)'
-        this.baseClasses = [this.type]
-
+        this.label = 'SMEFlow African Market Integrations';
+        this.name = 'smeflowAfricanIntegrations';
+        this.version = 1.0;
+        this.type = 'SMEFlowAfricanIntegrations';
+        this.icon = 'africa.svg';
+        this.category = 'SMEFlow Integrations';
+        this.description = 'Integrate with African market services: M-Pesa, Paystack, WhatsApp Business, local APIs';
+        this.baseClasses = [this.type];
         this.inputs = [
             {
                 label: 'Integration Type',
@@ -20,43 +20,43 @@ class SMEFlowAfricanIntegrations {
                 options: [
                     {
                         label: 'M-Pesa Payment',
-                        name: 'mpesa_payment'
+                        name: 'mpesa_payment',
+                        description: 'Safaricom M-Pesa mobile money integration'
                     },
                     {
                         label: 'Paystack Payment',
-                        name: 'paystack_payment'
+                        name: 'paystack_payment',
+                        description: 'Paystack payment gateway integration'
                     },
                     {
                         label: 'Flutterwave Payment',
-                        name: 'flutterwave_payment'
+                        name: 'flutterwave_payment',
+                        description: 'Flutterwave payment processing'
+                    },
+                    {
+                        label: 'WhatsApp Business',
+                        name: 'whatsapp_business',
+                        description: 'WhatsApp Business API messaging'
                     },
                     {
                         label: 'Africa\'s Talking SMS',
-                        name: 'africas_talking_sms'
-                    },
-                    {
-                        label: 'WhatsApp Business API',
-                        name: 'whatsapp_business'
+                        name: 'africastalking_sms',
+                        description: 'SMS gateway via Africa\'s Talking'
                     },
                     {
                         label: 'Jumia API',
-                        name: 'jumia_api'
+                        name: 'jumia_api',
+                        description: 'Jumia marketplace integration'
                     },
                     {
-                        label: 'Nigerian Bank Verification',
-                        name: 'nigeria_bvn'
+                        label: 'Local Banking API',
+                        name: 'local_banking',
+                        description: 'Local bank API integrations'
                     },
                     {
-                        label: 'Kenya KRA Tax API',
-                        name: 'kenya_kra'
-                    },
-                    {
-                        label: 'South Africa SARS',
-                        name: 'south_africa_sars'
-                    },
-                    {
-                        label: 'Local Banking APIs',
-                        name: 'local_banking'
+                        label: 'Government Services',
+                        name: 'government_services',
+                        description: 'Government API integrations (tax, compliance)'
                     }
                 ],
                 default: 'mpesa_payment'
@@ -105,36 +105,36 @@ class SMEFlowAfricanIntegrations {
                 label: 'Tenant ID',
                 name: 'tenantId',
                 type: 'string',
-                placeholder: 'Enter tenant UUID',
+                placeholder: 'Enter tenant UUID (e.g., 550e8400-e29b-41d4-a716-446655440000)',
                 description: 'Multi-tenant isolation identifier'
             },
             {
                 label: 'Integration Configuration',
                 name: 'integrationConfig',
                 type: 'json',
-                placeholder: '{"api_key": "your_api_key", "environment": "sandbox", "callback_url": "https://your-app.com/callback"}',
-                description: 'Integration-specific configuration and credentials'
+                placeholder: '{"api_key": "your_api_key", "environment": "sandbox", "webhook_url": "https://your-domain.com/webhook"}',
+                description: 'JSON configuration for the integration service'
             },
             {
-                label: 'Transaction Data',
-                name: 'transactionData',
+                label: 'Transaction/Request Data',
+                name: 'requestData',
                 type: 'json',
-                placeholder: '{"amount": 1000, "currency": "KES", "phone": "+254700000000", "reference": "TXN123"}',
-                description: 'Transaction or operation data'
+                placeholder: '{"amount": 1000, "phone": "+254700000000", "account_reference": "ORDER123", "transaction_desc": "Payment for services"}',
+                description: 'JSON data for the integration request (payment, message, etc.)'
             },
             {
-                label: 'Local Settings',
-                name: 'localSettings',
+                label: 'Market Localization',
+                name: 'marketLocalization',
                 type: 'json',
-                placeholder: '{"language": "sw", "timezone": "Africa/Nairobi", "currency_format": "KES"}',
-                description: 'Local market settings and preferences',
+                placeholder: '{"currency": "KES", "language": "sw", "timezone": "Africa/Nairobi", "phone_format": "+254"}',
+                description: 'Market-specific localization settings',
                 optional: true
             },
             {
-                label: 'Compliance Configuration',
-                name: 'complianceConfig',
+                label: 'Compliance Settings',
+                name: 'complianceSettings',
                 type: 'json',
-                placeholder: '{"data_residency": true, "audit_logging": true, "regulatory_compliance": ["cbn", "popia"]}',
+                placeholder: '{"data_residency": "local", "audit_logging": true, "encryption": "aes256"}',
                 description: 'Compliance and regulatory settings',
                 optional: true
             },
@@ -143,187 +143,141 @@ class SMEFlowAfricanIntegrations {
                 name: 'apiUrl',
                 type: 'string',
                 default: 'http://smeflow:8000',
-                description: 'SMEFlow API endpoint'
+                description: 'SMEFlow API endpoint URL'
             },
             {
                 label: 'API Key',
                 name: 'apiKey',
                 type: 'password',
                 placeholder: 'Enter SMEFlow API key',
+                description: 'Authentication key for SMEFlow API',
                 optional: true
             }
-        ]
+        ];
     }
 
-    async init(nodeData) {
-        const integrationType = nodeData.inputs?.integrationType || 'mpesa_payment'
-        const country = nodeData.inputs?.country || 'nigeria'
-        const tenantId = nodeData.inputs?.tenantId
-        const integrationConfig = nodeData.inputs?.integrationConfig
-        const transactionData = nodeData.inputs?.transactionData
-        const localSettings = nodeData.inputs?.localSettings
-        const complianceConfig = nodeData.inputs?.complianceConfig
-        const apiUrl = nodeData.inputs?.apiUrl || 'http://smeflow:8000'
-        const apiKey = nodeData.inputs?.apiKey
+    async init(nodeData, _, options) {
+        const integrationType = nodeData.inputs?.integrationType || 'mpesa_payment';
+        const country = nodeData.inputs?.country || 'nigeria';
+        const tenantId = nodeData.inputs?.tenantId;
+        const integrationConfig = nodeData.inputs?.integrationConfig;
+        const requestData = nodeData.inputs?.requestData;
+        const marketLocalization = nodeData.inputs?.marketLocalization;
+        const complianceSettings = nodeData.inputs?.complianceSettings;
+        const apiUrl = nodeData.inputs?.apiUrl || 'http://smeflow:8000';
+        const apiKey = nodeData.inputs?.apiKey;
 
         if (!tenantId) {
-            throw new Error('Tenant ID is required for multi-tenant isolation')
+            throw new Error('Tenant ID is required for multi-tenant isolation');
         }
 
         if (!integrationConfig) {
-            throw new Error('Integration configuration is required')
+            throw new Error('Integration Configuration is required');
+        }
+
+        if (!requestData) {
+            throw new Error('Transaction/Request Data is required');
+        }
+
+        // Validate UUID format
+        const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+        if (!uuidRegex.test(tenantId)) {
+            throw new Error('Tenant ID must be a valid UUID format');
         }
 
         try {
             // Parse configurations
-            const config = JSON.parse(integrationConfig || '{}')
-            const transaction = JSON.parse(transactionData || '{}')
-            const local = JSON.parse(localSettings || '{}')
-            const compliance = JSON.parse(complianceConfig || '{}')
+            const config = JSON.parse(integrationConfig || '{}');
+            const data = JSON.parse(requestData || '{}');
+            const localization = JSON.parse(marketLocalization || '{}');
+            const compliance = JSON.parse(complianceSettings || '{}');
             
-            // Default local settings by country
+            // Default market localization by country
             const countryDefaults = {
                 nigeria: {
                     currency: 'NGN',
+                    language: 'en',
                     timezone: 'Africa/Lagos',
-                    languages: ['en', 'ha', 'yo', 'ig'],
                     phone_format: '+234',
-                    business_hours: '08:00-18:00',
-                    payment_methods: ['paystack', 'flutterwave', 'bank_transfer'],
-                    regulatory_bodies: ['cbn', 'cac'],
-                    tax_system: 'firs'
+                    payment_methods: ['paystack', 'flutterwave', 'bank_transfer']
                 },
                 kenya: {
                     currency: 'KES',
+                    language: 'sw',
                     timezone: 'Africa/Nairobi',
-                    languages: ['en', 'sw'],
                     phone_format: '+254',
-                    business_hours: '08:00-17:00',
-                    payment_methods: ['mpesa', 'airtel_money', 'bank_transfer'],
-                    regulatory_bodies: ['cbk', 'kra'],
-                    tax_system: 'kra'
+                    payment_methods: ['mpesa', 'paystack', 'bank_transfer']
                 },
                 south_africa: {
                     currency: 'ZAR',
+                    language: 'en',
                     timezone: 'Africa/Johannesburg',
-                    languages: ['en', 'af', 'zu', 'xh'],
                     phone_format: '+27',
-                    business_hours: '08:00-17:00',
-                    payment_methods: ['eft', 'card_payment', 'instant_eft'],
-                    regulatory_bodies: ['sarb', 'sars'],
-                    tax_system: 'sars'
+                    payment_methods: ['paystack', 'ozow', 'bank_transfer']
                 },
                 ghana: {
                     currency: 'GHS',
+                    language: 'en',
                     timezone: 'Africa/Accra',
-                    languages: ['en', 'tw', 'ak'],
                     phone_format: '+233',
-                    business_hours: '08:00-17:00',
-                    payment_methods: ['mtn_momo', 'vodafone_cash', 'bank_transfer'],
-                    regulatory_bodies: ['bog', 'gra'],
-                    tax_system: 'gra'
+                    payment_methods: ['paystack', 'flutterwave', 'mtn_mobile_money']
                 }
-            }
+            };
 
-            const defaultLocal = countryDefaults[country] || countryDefaults.nigeria
-            const finalLocal = { ...defaultLocal, ...local }
+            const defaultLocalization = countryDefaults[country] || countryDefaults.nigeria;
+            const finalLocalization = { ...defaultLocalization, ...localization };
             
-            // Default compliance configuration
+            // Default compliance settings
             const defaultCompliance = {
-                data_residency: true,
+                data_residency: 'local',
                 audit_logging: true,
-                encryption_required: true,
-                regulatory_compliance: finalLocal.regulatory_bodies,
-                pci_dss_required: integrationType.includes('payment'),
-                gdpr_compliance: true,
-                local_data_protection: true,
-                transaction_monitoring: true,
-                fraud_detection: true,
-                aml_compliance: integrationType.includes('payment')
-            }
+                encryption: 'aes256',
+                gdpr_compliant: true,
+                local_regulations: true
+            };
 
-            const finalCompliance = { ...defaultCompliance, ...compliance }
-            
-            // Integration-specific configurations
-            const integrationDefaults = {
-                mpesa_payment: {
-                    environment: 'sandbox',
-                    business_short_code: '',
-                    passkey: '',
-                    callback_url: '',
-                    timeout: 30,
-                    supported_currencies: ['KES'],
-                    min_amount: 1,
-                    max_amount: 300000
-                },
-                paystack_payment: {
-                    environment: 'test',
-                    callback_url: '',
-                    webhook_url: '',
-                    supported_currencies: ['NGN', 'GHS', 'ZAR', 'USD'],
-                    channels: ['card', 'bank', 'ussd', 'qr', 'mobile_money']
-                },
-                africas_talking_sms: {
-                    environment: 'sandbox',
-                    username: '',
-                    sender_id: '',
-                    supported_countries: ['KE', 'UG', 'TZ', 'RW', 'MW', 'ZM']
-                },
-                whatsapp_business: {
-                    phone_number_id: '',
-                    business_account_id: '',
-                    webhook_verify_token: '',
-                    supported_message_types: ['text', 'media', 'template', 'interactive']
-                }
-            }
-
-            const integrationDefault = integrationDefaults[integrationType] || {}
-            const finalConfig = { ...integrationDefault, ...config }
+            const finalCompliance = { ...defaultCompliance, ...compliance };
             
             // Prepare headers with tenant isolation
             const headers = {
                 'Content-Type': 'application/json',
                 'X-Tenant-ID': tenantId,
-                'X-Integration-Type': integrationType,
-                'X-Country': country
-            }
+                'X-Country': country,
+                'X-Integration-Type': integrationType
+            };
             
             if (apiKey) {
-                headers['Authorization'] = `Bearer ${apiKey}`
+                headers['Authorization'] = `Bearer ${apiKey}`;
             }
 
-            // Create African integration request
+            // Create integration request
             const integrationRequest = {
                 integration_type: integrationType,
                 country: country,
                 tenant_id: tenantId,
                 config: {
-                    ...finalConfig,
-                    local_settings: finalLocal,
-                    compliance_config: finalCompliance,
-                    integration_metadata: {
-                        source: 'flowise',
-                        node_id: nodeData.instance?.id,
-                        workflow_id: nodeData.instance?.chatflowId,
-                        timestamp: new Date().toISOString()
-                    }
+                    ...config,
+                    ...finalLocalization,
+                    source: 'flowise',
+                    workflow_id: nodeData.instance?.id,
+                    created_at: new Date().toISOString()
                 },
-                transaction_data: transaction,
-                context: {
-                    integration_type: integrationType,
-                    country: country,
-                    african_market: true,
-                    multi_tenant: true,
-                    source: 'flowise_african_integrations_node'
+                request_data: data,
+                compliance_settings: finalCompliance,
+                execution_options: {
+                    async: false,
+                    timeout: 120,
+                    retry_on_failure: true,
+                    max_retries: 3
                 }
-            }
+            };
 
-            // Execute African integration via SMEFlow API
+            // Execute integration via SMEFlow API
             const response = await axios.post(
-                `${apiUrl}/api/v1/integrations/african-market/execute`,
+                `${apiUrl}/api/v1/integrations/african-markets/execute`,
                 integrationRequest,
-                { headers, timeout: 60000 }
-            )
+                { headers, timeout: 120000 }
+            );
 
             return {
                 success: true,
@@ -331,41 +285,36 @@ class SMEFlowAfricanIntegrations {
                 country: country,
                 integration_id: response.data.integration_id,
                 transaction_id: response.data.transaction_id,
+                status: response.data.status,
                 result: response.data.result,
-                transaction_status: response.data.transaction_status,
-                payment_reference: response.data.payment_reference,
-                confirmation_code: response.data.confirmation_code,
-                fees_charged: response.data.fees_charged,
+                provider_response: response.data.provider_response,
+                fees: response.data.fees,
                 exchange_rate: response.data.exchange_rate,
                 local_amount: response.data.local_amount,
-                processing_time: response.data.processing_time,
-                compliance_status: response.data.compliance_status,
-                audit_trail: response.data.audit_trail,
-                next_steps: response.data.next_steps,
-                webhook_data: response.data.webhook_data,
+                confirmation_code: response.data.confirmation_code,
+                cost_usd: response.data.cost_usd,
+                execution_time: response.data.execution_time,
                 tenant_id: tenantId,
-                local_settings: finalLocal,
-                compliance_config: finalCompliance,
+                market_config: finalLocalization,
+                compliance_status: response.data.compliance_status,
                 timestamp: new Date().toISOString()
-            }
+            };
 
         } catch (error) {
-            console.error('SMEFlow African Integrations execution error:', error)
+            console.error('SMEFlow African Integrations execution error:', error);
             
             return {
                 success: false,
                 integration_type: integrationType,
                 country: country,
                 error: error.message,
-                error_code: error.response?.status,
-                error_details: error.response?.data,
+                error_code: error.response?.status || 'UNKNOWN',
+                provider_error: error.response?.data?.provider_error,
                 tenant_id: tenantId,
-                timestamp: new Date().toISOString(),
-                retry_recommended: error.response?.status >= 500,
-                suggested_action: 'Check integration configuration and credentials'
-            }
+                timestamp: new Date().toISOString()
+            };
         }
     }
 }
 
-module.exports = { nodeClass: SMEFlowAfricanIntegrations }
+module.exports = { nodeClass: SMEFlowAfricanIntegrations_Tools };

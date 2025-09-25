@@ -15,16 +15,16 @@ def replace_node_files():
     # Define node replacements
     replacements = [
         {
-            "original": base_path / "agents/SMEFlowAutomator/SMEFlowAutomator.js",
-            "fixed": base_path / "agents/SMEFlowAutomator/SMEFlowAutomator_fixed.js"
+            "original": base_path / "agents/SMEFlowSupervisor/SMEFlowSupervisor.js",
+            "fixed": base_path / "agents/SMEFlowSupervisor/SMEFlowSupervisor_fixed.js"
         },
         {
-            "original": base_path / "agents/SMEFlowAgent/SMEFlowAgent.js", 
-            "fixed": base_path / "agents/SMEFlowAgent/SMEFlowAgent_fixed.js"
+            "original": base_path / "chains/SMEFlowWorkflow/SMEFlowWorkflow.js",
+            "fixed": base_path / "chains/SMEFlowWorkflow/SMEFlowWorkflow_fixed.js"
         },
         {
-            "original": base_path / "utilities/SMEFlowTenantManager/SMEFlowTenantManager.js",
-            "fixed": base_path / "utilities/SMEFlowTenantManager/SMEFlowTenantManager_fixed.js"
+            "original": base_path / "tools/SMEFlowAfricanIntegrations/SMEFlowAfricanIntegrations.js",
+            "fixed": base_path / "tools/SMEFlowAfricanIntegrations/SMEFlowAfricanIntegrations_fixed.js"
         }
     ]
     

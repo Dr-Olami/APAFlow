@@ -14,6 +14,20 @@ class SMEFlowAfricanIntegrations_Tools {
         this.baseClasses = [this.type];
         this.inputs = [
             {
+                label: 'SMEFlow Agent',
+                name: 'smeflowAgent',
+                type: 'SMEFlowAutomator',
+                optional: true,
+                description: 'Connect SMEFlow Automator Agent for task coordination'
+            },
+            {
+                label: 'SMEFlow Tenant Manager',
+                name: 'tenantManager',
+                type: 'SMEFlowTenantManager',
+                optional: true,
+                description: 'Connect SMEFlow Tenant Manager for tenant configuration'
+            },
+            {
                 label: 'Integration Type',
                 name: 'integrationType',
                 type: 'options',
@@ -157,15 +171,29 @@ class SMEFlowAfricanIntegrations_Tools {
     }
 
     async init(nodeData, _, options) {
+        const smeflowAgent = nodeData.inputs?.smeflowAgent;
+        const tenantManager = nodeData.inputs?.tenantManager;
         const integrationType = nodeData.inputs?.integrationType || 'mpesa_payment';
         const country = nodeData.inputs?.country || 'nigeria';
-        const tenantId = nodeData.inputs?.tenantId;
+        let tenantId = nodeData.inputs?.tenantId;
         const integrationConfig = nodeData.inputs?.integrationConfig;
         const requestData = nodeData.inputs?.requestData;
         const marketLocalization = nodeData.inputs?.marketLocalization;
         const complianceSettings = nodeData.inputs?.complianceSettings;
         const apiUrl = nodeData.inputs?.apiUrl || 'http://smeflow:8000';
         const apiKey = nodeData.inputs?.apiKey;
+
+        // If tenant manager is connected, use its tenant configuration
+        if (tenantManager && tenantManager.success) {
+            tenantId = tenantManager.tenant_id;
+            console.log('SMEFlow African Integrations: Using tenant configuration from connected Tenant Manager');
+        }
+
+        // If SMEFlow agent is connected, inherit its context
+        if (smeflowAgent && smeflowAgent.success) {
+            tenantId = tenantId || smeflowAgent.tenant_id;
+            console.log('SMEFlow African Integrations: Using context from connected SMEFlow Agent');
+        }
 
         if (!tenantId) {
             throw new Error('Tenant ID is required for multi-tenant isolation');

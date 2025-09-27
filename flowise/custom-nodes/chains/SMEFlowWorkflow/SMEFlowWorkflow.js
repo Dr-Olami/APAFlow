@@ -14,6 +14,13 @@ class SMEFlowWorkflow_Chains {
         this.baseClasses = [this.type];
         this.inputs = [
             {
+                label: 'SMEFlow Tenant Manager',
+                name: 'tenantManager',
+                type: 'SMEFlowTenantManager',
+                optional: true,
+                description: 'Connect SMEFlow Tenant Manager for tenant configuration'
+            },
+            {
                 label: 'Workflow Template',
                 name: 'workflowTemplate',
                 type: 'options',

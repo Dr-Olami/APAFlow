@@ -14,6 +14,13 @@ class SMEFlowAutomator_Agents {
         this.baseClasses = [this.type];
         this.inputs = [
             {
+                label: 'SMEFlow Tenant Manager',
+                name: 'tenantManager',
+                type: 'SMEFlowTenantManager',
+                optional: true,
+                description: 'Connect SMEFlow Tenant Manager for tenant configuration'
+            },
+            {
                 label: 'Task Type',
                 name: 'taskType',
                 type: 'options',
@@ -101,13 +108,20 @@ class SMEFlowAutomator_Agents {
     }
 
     async init(nodeData, _, options) {
+        const tenantManager = nodeData.inputs?.tenantManager;
         const taskType = nodeData.inputs?.taskType || 'api_integration';
-        const tenantId = nodeData.inputs?.tenantId;
+        let tenantId = nodeData.inputs?.tenantId;
         const taskConfig = nodeData.inputs?.taskConfig;
         const inputData = nodeData.inputs?.inputData;
         const marketConfig = nodeData.inputs?.marketConfig;
         const apiUrl = nodeData.inputs?.apiUrl || 'http://smeflow:8000';
         const apiKey = nodeData.inputs?.apiKey;
+
+        // If tenant manager is connected, use its tenant configuration
+        if (tenantManager && tenantManager.success) {
+            tenantId = tenantManager.tenant_id;
+            console.log('SMEFlow Automator: Using tenant configuration from connected Tenant Manager');
+        }
 
         if (!tenantId) {
             throw new Error('Tenant ID is required for multi-tenant isolation');

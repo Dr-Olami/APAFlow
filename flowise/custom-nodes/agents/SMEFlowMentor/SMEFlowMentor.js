@@ -9,7 +9,7 @@ class SMEFlowMentor_Agents {
         this.version = 1.0;
         this.type = 'SMEFlowMentor';
         this.icon = 'mentor.svg';
-        this.category = 'SMEFlow Agents';
+        this.category = 'Agents';
         this.description = 'Provide business guidance and strategic recommendations for African SMEs';
         this.baseClasses = [this.type, 'Agent'];
         this.inputs = [

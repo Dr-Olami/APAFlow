@@ -9,7 +9,7 @@ class SMEFlowWorkflow_Chains {
         this.version = 1.0;
         this.type = 'SMEFlowWorkflow';
         this.icon = 'workflow.svg';
-        this.category = 'SMEFlow';
+        this.category = 'Chains';
         this.description = 'Execute SMEFlow LangGraph workflows with industry templates and African market optimization';
         this.baseClasses = [this.type, 'BaseChain', 'Chain'];
         this.inputs = [

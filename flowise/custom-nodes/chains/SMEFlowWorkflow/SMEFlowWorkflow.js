@@ -11,7 +11,7 @@ class SMEFlowWorkflow_Chains {
         this.icon = 'workflow.svg';
         this.category = 'SMEFlow';
         this.description = 'Execute SMEFlow LangGraph workflows with industry templates and African market optimization';
-        this.baseClasses = [this.type, 'BaseChain'];
+        this.baseClasses = [this.type, 'BaseChain', 'Chain'];
         this.inputs = [
             {
                 label: 'SMEFlow Tenant Manager',

@@ -11,7 +11,7 @@ class SMEFlowAutomator_Agents {
         this.icon = 'automator.svg';
         this.category = 'SMEFlow Agents';
         this.description = 'Execute automated tasks with African market integrations (M-Pesa, APIs, data processing)';
-        this.baseClasses = [this.type, 'Agent'];
+        this.baseClasses = [this.type, 'BaseAgent', 'Agent'];
         this.inputs = [
             {
                 label: 'SMEFlow Tenant Manager',
@@ -212,6 +212,22 @@ class SMEFlowAutomator_Agents {
                 timestamp: new Date().toISOString()
             };
         }
+    }
+
+    // Required Flowise method for node execution
+    async run(nodeData, input, options) {
+        return await this.init(nodeData, input, options);
+    }
+
+    // Required Flowise method for serialization
+    serialize() {
+        return {
+            type: this.type,
+            label: this.label,
+            name: this.name,
+            version: this.version,
+            inputs: this.inputs
+        };
     }
 }
 

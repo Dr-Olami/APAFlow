@@ -167,6 +167,22 @@ class SMEFlowTenantManager_Utilities {
             };
         }
     }
+
+    // Required Flowise method for node execution
+    async run(nodeData, input, options) {
+        return await this.init(nodeData, input, options);
+    }
+
+    // Required Flowise method for serialization
+    serialize() {
+        return {
+            type: this.type,
+            label: this.label,
+            name: this.name,
+            version: this.version,
+            inputs: this.inputs
+        };
+    }
 }
 
 module.exports = { nodeClass: SMEFlowTenantManager_Utilities };

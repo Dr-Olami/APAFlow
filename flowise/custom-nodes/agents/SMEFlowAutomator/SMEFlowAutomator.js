@@ -11,7 +11,7 @@ class SMEFlowAutomator_Agents {
         this.icon = 'automator.svg';
         this.category = 'SMEFlow Agents';
         this.description = 'Execute automated tasks with African market integrations (M-Pesa, APIs, data processing)';
-        this.baseClasses = [this.type];
+        this.baseClasses = [this.type, 'Agent'];
         this.inputs = [
             {
                 label: 'SMEFlow Tenant Manager',

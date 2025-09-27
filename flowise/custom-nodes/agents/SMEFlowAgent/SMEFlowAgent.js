@@ -11,7 +11,7 @@ class SMEFlowAgent_Agents {
         this.icon = 'agent.svg';
         this.category = 'SMEFlow';
         this.description = 'Execute SMEFlow agent workflows with multi-tenant support and African market optimization';
-        this.baseClasses = [this.type];
+        this.baseClasses = [this.type, 'Agent'];
         this.inputs = [
             {
                 label: 'Agent Type',

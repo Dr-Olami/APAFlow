@@ -11,7 +11,7 @@ class SMEFlowSupervisor_Agents {
         this.icon = 'supervisor.svg';
         this.category = 'SMEFlow Agents';
         this.description = 'Orchestrate multi-agent workflows with escalation handling and quality assurance';
-        this.baseClasses = [this.type];
+        this.baseClasses = [this.type, 'Agent'];
         this.inputs = [
             {
                 label: 'Supervision Type',

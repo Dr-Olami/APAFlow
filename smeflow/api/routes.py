@@ -9,6 +9,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from smeflow.core.logging import get_logger
 from smeflow.database.connection import db_manager
 from .workflow_routes import router as workflow_router
+from .agent_routes import router as agent_router
+from .langgraph_workflow_routes import router as langgraph_router
+from .flowise_integration_routes import router as flowise_router
 
 logger = get_logger(__name__)
 security = HTTPBearer()
@@ -112,5 +115,8 @@ async def create_workflow():
     return {"message": "Workflow creation not yet implemented"}
 
 
-# Include workflow management routes
-api_router.include_router(workflow_router, prefix="/api/v1")
+# Include all API route modules
+api_router.include_router(workflow_router)
+api_router.include_router(agent_router)
+api_router.include_router(langgraph_router)
+api_router.include_router(flowise_router)

@@ -123,11 +123,12 @@ class SMEFlowAutomator_Agents {
         console.log('SMEFlow Automator: Tenant Manager connection:', tenantManager);
 
         // If tenant manager is connected, use its tenant configuration
-        if (tenantManager && tenantManager.success) {
+        if (tenantManager && tenantManager.tenant_id) {
             tenantId = tenantManager.tenant_id;
             console.log('SMEFlow Automator: Using tenant configuration from connected Tenant Manager');
             console.log('SMEFlow Automator: Inherited tenant ID:', tenantId);
-        } else if (input && input.success && input.tenant_id) {
+            console.log('SMEFlow Automator: Tenant Manager success status:', tenantManager.success);
+        } else if (input && input.tenant_id) {
             // Alternative: Check if input directly contains tenant data
             tenantId = input.tenant_id;
             console.log('SMEFlow Automator: Using tenant ID from input:', tenantId);

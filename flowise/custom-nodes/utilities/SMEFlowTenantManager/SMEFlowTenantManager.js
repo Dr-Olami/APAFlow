@@ -108,7 +108,7 @@ class SMEFlowTenantManager_Utilities {
         try {
             // Parse configurations
             const config = JSON.parse(tenantConfig || '{}');
-            const africanMarketConfig = JSON.parse(marketConfig || '{}');
+            const africanMarketConfig = JSON.parse(marketSettings || '{}');
             
             // Default African market optimizations
             const defaultMarketConfig = {

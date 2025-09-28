@@ -107,8 +107,9 @@ class SMEFlowAutomator_Agents {
         ];
     }
 
-    async init(nodeData, _, options) {
-        const tenantManager = nodeData.inputs?.tenantManager;
+    async init(nodeData, input, options) {
+        // Handle connected node data (Flowise passes it through input parameter)
+        const tenantManager = nodeData.inputs?.tenantManager || input;
         const taskType = nodeData.inputs?.taskType || 'api_integration';
         let tenantId = nodeData.inputs?.tenantId;
         const taskConfig = nodeData.inputs?.taskConfig;
@@ -117,11 +118,19 @@ class SMEFlowAutomator_Agents {
         const apiUrl = nodeData.inputs?.apiUrl || 'http://smeflow:8000';
         const apiKey = nodeData.inputs?.apiKey;
 
+        // Debug: Log what we receive from connected nodes
+        console.log('SMEFlow Automator: Received input:', input);
+        console.log('SMEFlow Automator: Tenant Manager connection:', tenantManager);
+
         // If tenant manager is connected, use its tenant configuration
         if (tenantManager && tenantManager.success) {
             tenantId = tenantManager.tenant_id;
             console.log('SMEFlow Automator: Using tenant configuration from connected Tenant Manager');
             console.log('SMEFlow Automator: Inherited tenant ID:', tenantId);
+        } else if (input && input.success && input.tenant_id) {
+            // Alternative: Check if input directly contains tenant data
+            tenantId = input.tenant_id;
+            console.log('SMEFlow Automator: Using tenant ID from input:', tenantId);
         }
 
         if (!tenantId) {

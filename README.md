@@ -13,7 +13,7 @@ A comprehensive development setup for building LLM applications with LangChain, 
 
 ## 📋 Prerequisites
 
-- Python 3.8+
+- Python 3.11+
 - Node.js 18+
 - uv (fast Python package installer)
 - Docker (optional)

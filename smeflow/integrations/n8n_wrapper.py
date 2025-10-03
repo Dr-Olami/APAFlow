@@ -582,15 +582,20 @@ class SMEFlowN8nClient:
             for template in self._templates.values()
         ]
     
-    async def health_check(self) -> Dict[str, Any]:
+    async def health_check(self, tenant_id: Optional[str] = None) -> Dict[str, Any]:
         """
         Perform health check on N8n connection.
+        
+        Args:
+            tenant_id: Optional tenant ID for health check. Uses default if not provided.
         
         Returns:
             Health status information
         """
         try:
-            client = await self.get_client()
+            # Use default tenant for health check if none provided
+            check_tenant_id = tenant_id or "health-check"
+            client = await self.get_client(check_tenant_id)
             workflows = await client.list_workflows(limit=1)
             
             return {

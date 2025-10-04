@@ -9,7 +9,7 @@ from pathlib import Path
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .database.connection import database_manager
+from .database.connection import db_manager
 from .core.config import settings
 from .core.cache import cache_manager
 from smeflow.core.logging import setup_logging
@@ -64,7 +64,7 @@ def create_app() -> FastAPI:
     @app.on_event("startup")
     async def startup_event():
         """Initialize services on startup."""
-        await database_manager.initialize()
+        await db_manager.initialize()
         await cache_manager.initialize()
         # Initialize Keycloak client
         await keycloak_client.initialize()
@@ -72,7 +72,7 @@ def create_app() -> FastAPI:
     @app.on_event("shutdown")
     async def shutdown_event():
         """Cleanup services on shutdown."""
-        await database_manager.close()
+        await db_manager.close()
         await cache_manager.close()
         await keycloak_client.close()
     

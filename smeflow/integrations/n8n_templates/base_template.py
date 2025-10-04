@@ -35,6 +35,14 @@ class N8nConnection(BaseModel):
     node: str
     type: str = "main"
     index: int = 0
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for JSON serialization."""
+        return {
+            "node": self.node,
+            "type": self.type,
+            "index": self.index
+        }
 
 
 class N8nWorkflowTemplate(ABC):
@@ -236,6 +244,26 @@ class N8nWorkflowTemplate(ABC):
             position=[800, 500]
         )
     
+    def _serialize_connections(self) -> Dict[str, Any]:
+        """
+        Convert N8nConnection objects to JSON-serializable format.
+        
+        Returns:
+            Serialized connections dictionary
+        """
+        serialized = {}
+        for node_name, connection_lists in self.connections.items():
+            serialized[node_name] = []
+            for connection_list in connection_lists:
+                serialized_list = []
+                for connection in connection_list:
+                    if isinstance(connection, N8nConnection):
+                        serialized_list.append(connection.to_dict())
+                    else:
+                        serialized_list.append(connection)
+                serialized[node_name].append(serialized_list)
+        return serialized
+
     def get_workflow_metadata(self) -> Dict[str, Any]:
         """
         Get workflow metadata for SMEFlow integration.
@@ -248,14 +276,30 @@ class N8nWorkflowTemplate(ABC):
             "name": f"{self.template_name} - {self.tenant_id}",
             "tenant_id": self.tenant_id,
             "template_name": self.template_name,
-            "created_at": datetime.utcnow().isoformat(),
-            "tags": ["smeflow", "african-market", self.template_name.lower()],
+            "active": True,
+            "staticData": None,
             "settings": {
-                "executionOrder": "v1",
-                "saveManualExecutions": True,
-                "callerPolicy": "workflowsFromSameOwner",
-                "errorWorkflow": f"error-handler-{self.tenant_id}"
-            }
+                "executionOrder": "v1"
+            },
+            "pinData": {},
+            "versionId": "1.0.0",
+            "meta": {
+                "templateCredsSetupCompleted": True
+            },
+            "tags": [
+                {
+                    "createdAt": "2024-01-01T00:00:00.000Z",
+                    "updatedAt": "2024-01-01T00:00:00.000Z",
+                    "id": "1",
+                    "name": "SMEFlow"
+                },
+                {
+                    "createdAt": "2024-01-01T00:00:00.000Z", 
+                    "updatedAt": "2024-01-01T00:00:00.000Z",
+                    "id": "2",
+                    "name": f"Tenant-{self.tenant_id}"
+                }
+            ]
         }
     
     def to_n8n_json(self) -> str:
@@ -271,7 +315,7 @@ class N8nWorkflowTemplate(ABC):
     def validate_african_market_compliance(self) -> List[str]:
         """
         Validate workflow for African market compliance requirements.
-        
+{{ ... }}
         Returns:
             List of compliance issues (empty if compliant)
         """
@@ -317,7 +361,7 @@ class SimpleN8nWorkflowTemplate(N8nWorkflowTemplate):
         workflow_def = {
             **self.get_workflow_metadata(),
             "nodes": [node.model_dump() for node in self.nodes],
-            "connections": self.connections
+            "connections": self._serialize_connections()
         }
         
         return workflow_def

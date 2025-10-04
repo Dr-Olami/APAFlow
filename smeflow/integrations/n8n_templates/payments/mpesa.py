@@ -88,7 +88,7 @@ class MpesaWorkflowTemplate(N8nWorkflowTemplate):
         workflow_def = {
             **self.get_workflow_metadata(),
             "nodes": [node.model_dump() for node in self.nodes],
-            "connections": self.connections,
+            "connections": self._serialize_connections(),
             "staticData": {
                 "mpesa_config": {
                     "environment": self.environment,

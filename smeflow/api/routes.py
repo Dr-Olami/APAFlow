@@ -12,6 +12,7 @@ from .workflow_routes import router as workflow_router
 from .agent_routes import router as agent_router
 from .langgraph_workflow_routes import router as langgraph_router
 from .flowise_integration_routes import router as flowise_router
+from .n8n_routes import router as n8n_router
 
 logger = get_logger(__name__)
 security = HTTPBearer()
@@ -120,3 +121,4 @@ api_router.include_router(workflow_router)
 api_router.include_router(agent_router)
 api_router.include_router(langgraph_router)
 api_router.include_router(flowise_router)
+api_router.include_router(n8n_router)

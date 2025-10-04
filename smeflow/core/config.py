@@ -112,6 +112,12 @@ class Settings(BaseSettings):
     N8N_MAX_RETRIES: Optional[int] = Field(default=3, description="N8n max retry attempts")
     N8N_TENANT_PREFIX: Optional[str] = Field(default="smeflow", description="N8n tenant prefix")
     
+    # Credential Management
+    CREDENTIAL_ENCRYPTION_KEY: Optional[str] = Field(
+        default=None, 
+        description="Encryption key for n8N credentials (32 bytes base64)"
+    )
+    
     # API Security Settings
     RATE_LIMIT_PER_MINUTE: Optional[int] = Field(default=60, description="Rate limit per minute")
     RATE_LIMIT_PER_HOUR: Optional[int] = Field(default=1000, description="Rate limit per hour")
